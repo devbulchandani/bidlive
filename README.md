@@ -8,6 +8,8 @@ Built for the **Nexconn Build Challenge 2026**.
 
 ---
 
+![Two windows at the same instant: Riya is outbid, Arjun is leading](docs/screenshots/00-hero.png)
+
 ## Run it
 
 ```bash
@@ -190,6 +192,7 @@ append and the subscriber fan-out) and use a sticky or pub/sub path for SSE.
 | `npm run build` | Production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `POST /api/dev/reset` | Re-arm fresh demo lots (also a button in the footer) |
+| `node scripts/rehearse.mjs` | Drive the full demo in two browser windows and capture `docs/screenshots/` |
 | `npm run check:nexconn` | Find your data centre and verify the signature |
 | `node scripts/verify-sdk.mjs` | Prove the browser SDK receives a message live |
 | `node scripts/shoot.mjs <url> <out.png>` | Screenshot harness used during development |

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { LotView } from "@/lib/types";
 import type { Identity } from "@/lib/client/identity";
 import { parseBidInput } from "@/lib/auction";
-import { initials, rupee, timeOf } from "@/lib/format";
+import { initials, plural, rupee, timeOf } from "@/lib/format";
 import { Countdown } from "@/components/Countdown";
 
 export function BidPanel({
@@ -91,8 +91,8 @@ export function BidPanel({
           <div className="hint" style={{ marginTop: 6 }}>
             {lot.bidCount
               ? live
-                ? `${lot.bidCount} bids · next ${rupee(min)}`
-                : `${lot.bidCount} bids · final`
+                ? `${plural(lot.bidCount, "bid")} · next ${rupee(min)}`
+                : `${plural(lot.bidCount, "bid")} · final`
               : live
                 ? `No bids yet · start at ${rupee(min)}`
                 : "No bids placed"}

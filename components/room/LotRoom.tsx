@@ -7,7 +7,7 @@ import { useLotFeed, useNotices } from "@/lib/client/hooks";
 import { useNexconnBridge } from "@/lib/client/nexconn";
 import { useIdentityState } from "@/lib/client/identity";
 import type { AuctionEvent, LotView, Notice } from "@/lib/types";
-import { initials, rupee } from "@/lib/format";
+import { initials, plural, rupee } from "@/lib/format";
 import { IdentityGate } from "@/components/IdentityGate";
 import { TopBar } from "@/components/TopBar";
 import { EventItem } from "@/components/room/EventItem";
@@ -193,7 +193,8 @@ export function LotRoom({ lotId }: { lotId: string }) {
               <div style={{ minWidth: 0 }}>
                 <h1>{lot.title}</h1>
                 <div className="sub">
-                  {lot.subtitle} · {lot.bidCount} bids · {lot.watchers} watching
+                  {lot.subtitle} · {plural(lot.bidCount, "bid")} ·{" "}
+                  {plural(lot.watchers, "watcher")}
                 </div>
               </div>
               <div className="grow" />

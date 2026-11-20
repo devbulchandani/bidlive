@@ -1,5 +1,7 @@
 export const rupee = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
 export function clock(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(total / 60);

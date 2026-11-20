@@ -223,14 +223,20 @@ export function appendEvent(input: AppendInput): AuctionEvent {
   if (list.length > 600) list.splice(0, list.length - 600);
   s.events.set(input.lotId, list);
 
-  for (const fn of s.listeners.get(input.lotId) ?? []) {
-    safely(() => fn(event));
-  }
-  if (input.userId) {
-    for (const fn of s.userListeners.get(input.userId) ?? []) {
+  // Broadcast on a microtask, not inline. Callers append an event and then finish
+  // mutating the lot (e.g. stamping the winning bid's seq). Broadcasting inline
+  // would ship a summary taken mid-mutation, and the room would render the newest
+  // bid as OUTBID because top.seq was still 0.
+  queueMicrotask(() => {
+    for (const fn of s.listeners.get(input.lotId) ?? []) {
       safely(() => fn(event));
     }
-  }
+    if (input.userId) {
+      for (const fn of s.userListeners.get(input.userId) ?? []) {
+        safely(() => fn(event));
+      }
+    }
+  });
   return event;
 }
 
