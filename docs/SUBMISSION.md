@@ -14,7 +14,7 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 | App Key | `4z3hlwrv4jtkt` (production environment, North America data centre) |
 | Demo video | `<link>` |
 | Runnable app | `<link>` |
-| Public repo | `<link>` |
+| Public repo | https://github.com/devbulchandani/bidlive |
 | Team | `<names + roles>` |
 | Pre-existing code | **None — built from scratch during the challenge.** Seeded demo lots only |
 | Category | Marketplace (also fits workplace/community chat) |
