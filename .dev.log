@@ -1,0 +1,40 @@
+
+> bidlive@0.1.0 dev
+> next dev -p 3000
+
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:3000
+   - Network:      http://10.11.39.173:3000
+
+ ✓ Starting...
+ ✓ Ready in 1874ms
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 822ms (300 modules)
+ GET /api/health 200 in 946ms
+ ✓ Compiled /api/dev/reset in 53ms (303 modules)
+ GET /api/dev/reset 405 in 71ms
+ POST /api/dev/reset 200 in 8ms
+ GET /api/dev/reset 405 in 4ms
+ POST /api/dev/reset 200 in 13ms
+ ✓ Compiled /api/lots/[id]/action in 130ms (306 modules)
+ POST /api/lots/yashica/action 200 in 463ms
+ POST /api/lots/yashica/action 200 in 6ms
+ POST /api/lots/yashica/action 200 in 15ms
+ POST /api/lots/yashica/action 200 in 44ms
+ POST /api/lots/yashica/action 200 in 15ms
+ POST /api/lots/yashica/action 200 in 15ms
+ POST /api/lots/jordan/action 200 in 9ms
+ POST /api/lots/jordan/action 200 in 15ms
+ POST /api/lots/yashica/action 200 in 7ms
+ ○ Compiling /lot/[id] ...
+ ✓ Compiled /lot/[id] in 1358ms (678 modules)
+ GET /lot/yashica?as=Kabir 200 in 1816ms
+ ✓ Compiled /api/notifications/stream in 276ms (428 modules)
+ ✓ Compiled in 60ms (238 modules)
+ POST /api/lots/yashica/action 200 in 376ms
+ GET /icon.svg?0812411a6172bd6e 200 in 410ms
+ GET /api/health 200 in 422ms
+ GET /icon.svg?0812411a6172bd6e 200 in 11ms
+ GET /api/lots/yashica 200 in 748ms
+ GET /api/lots/yashica/stream 200 in 2964ms
+ GET /api/notifications/stream?userId=kabir 200 in 2954ms
