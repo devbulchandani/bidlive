@@ -24,6 +24,8 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 
 ---
 
+![BidLive in one page](explainer.png)
+
 ## 1. Problem
 
 A collector in Jaipur misses the winning bid because he was driving. A seller can't prove what the
