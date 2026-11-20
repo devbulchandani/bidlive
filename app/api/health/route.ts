@@ -6,11 +6,15 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {
+  const cfg = nexsconnConfig();
   return NextResponse.json({
     ok: true,
     service: "bidlive",
     nexconnConfigured: isNexconnConfigured(),
-    nexconnApiBase: nexsconnConfig()?.apiBase ?? null,
+    nexconnApiBase: cfg?.apiBase ?? null,
+    areaCode: cfg?.areaCode ?? null,
+    // First characters only — the App Key is semi-public, the secret never is.
+    appKeyPreview: cfg ? `${cfg.appKey.slice(0, 6)}…` : null,
     lots: allLots().length,
     time: Date.now(),
   });

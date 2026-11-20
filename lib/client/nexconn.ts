@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { InitParams } from "@nexconn/chat";
 import type { Identity } from "./identity";
 import { client } from "./api";
 
@@ -52,7 +53,14 @@ export function useNexconnBridge(identity: Identity | null, channelId: string | 
         const { NCEngine, GroupChannel, MessageHandler, ConnectionStatusHandler } = sdk;
 
         if (!engineReady) {
-          NCEngine.initialize({ appKey });
+          // The data centre must match the App Key, or the socket connects to the
+          // wrong region and silently never receives anything.
+          const initParams: InitParams = { appKey };
+          const area = Number(process.env.NEXT_PUBLIC_NEXCONN_AREA_CODE ?? "2");
+          if (Number.isFinite(area) && area > 0) {
+            initParams.areaCode = area as InitParams["areaCode"];
+          }
+          NCEngine.initialize(initParams);
           NCEngine.registerCustomMessages([
             { messageType: "bidlive:Bid", isPersisted: true, isCounted: true },
             { messageType: "bidlive:System", isPersisted: true, isCounted: true },

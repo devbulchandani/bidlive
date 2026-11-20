@@ -38,3 +38,12 @@
  GET /api/lots/yashica 200 in 748ms
  GET /api/lots/yashica/stream 200 in 2964ms
  GET /api/notifications/stream?userId=kabir 200 in 2954ms
+ GET /api/health 200 in 7ms
+   Reload env: .env.local
+ ✓ Compiled in 1659ms (649 modules)
+ ✓ Compiled in 31ms (238 modules)
+   Reload env: .env.local
+ ✓ Compiled in 1625ms (649 modules)
+ ✓ Compiled in 182ms (635 modules)
+   Reload env: .env.local
+ ✓ Compiled in 548ms (635 modules)

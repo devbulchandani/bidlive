@@ -99,11 +99,17 @@ Two entry points, one rule set, so they cannot drift.
 ### Enabling the real thing
 
 ```bash
-NEXCONN_APP_KEY=...            # console.nexconn.ai → Development environment
-NEXCONN_APP_SECRET=...
+NEXCONN_APP_KEY=...               # console.nexconn.ai → App Key page
+NEXCONN_APP_SECRET=...            # same environment as the key
 NEXT_PUBLIC_NEXCONN_APP_KEY=...   # same App Key; safe to expose
-NEXCONN_API_BASE=https://api.sg.rongcloud.cn
+NEXCONN_API_BASE=https://api.sg-light-api.com   # Singapore data centre
+NEXCONN_AREA_CODE=2
 ```
+
+Run **`npm run check:nexconn`** first. It authenticates against every regional
+host and prints the exact `NEXCONN_API_BASE` / `NEXCONN_AREA_CODE` your app needs —
+the wrong data centre looks identical to a broken SDK, and that confusion costs
+hours. Then restart the dev server: `NEXT_PUBLIC_*` is inlined at build time.
 
 Then the top bar reads `Nexconn live`, and the room shows `SDK · n` — `n` counts messages actually
 received over the Nexconn socket, so the pill is evidence rather than decoration.
