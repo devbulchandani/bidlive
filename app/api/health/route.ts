@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isNexconnConfigured, nexsconnConfig } from "@/lib/nexconn/server";
+import { isNexconnConfigured, nexsconnConfig, recentMirrorResults } from "@/lib/nexconn/server";
 import { allLots } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,7 @@ export async function GET() {
     areaCode: cfg?.areaCode ?? null,
     // First characters only — the App Key is semi-public, the secret never is.
     appKeyPreview: cfg ? `${cfg.appKey.slice(0, 6)}…` : null,
+    nexconnRecent: recentMirrorResults(),
     lots: allLots().length,
     time: Date.now(),
   });

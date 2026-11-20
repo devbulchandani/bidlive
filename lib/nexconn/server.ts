@@ -242,3 +242,31 @@ export async function notifyUser(
   });
   return res.ok ? { ok: true as const } : { ok: false as const, error: res.error, code: res.code };
 }
+
+/* ------------------------------------------------------------------------- */
+/* Diagnostics                                                                */
+/* ------------------------------------------------------------------------- */
+
+export type MirrorResult = {
+  at: number;
+  ok: boolean;
+  kind: string;
+  error?: string;
+  code?: number;
+};
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __bidliveMirrorLog: MirrorResult[] | undefined;
+}
+
+/** Last few publish attempts — surfaced in /api/health so failures are visible. */
+export function recordMirror(result: MirrorResult) {
+  if (!globalThis.__bidliveMirrorLog) globalThis.__bidliveMirrorLog = [];
+  globalThis.__bidliveMirrorLog.push(result);
+  if (globalThis.__bidliveMirrorLog.length > 30) globalThis.__bidliveMirrorLog.shift();
+}
+
+export function recentMirrorResults(): MirrorResult[] {
+  return (globalThis.__bidliveMirrorLog ?? []).slice(-6);
+}

@@ -118,10 +118,32 @@ For **pre-delivery** validation (the strongest version: an invalid bid never exi
 point a message callback at `/api/nexconn/callback` in the console and set
 `NEXCONN_CALLBACK_ENFORCE=1`. The endpoint blocks with `code: 4` and the rejection reason.
 
+**Which data centre?** Nexconn runs one per region, and an app only exists in its
+own. This app authenticated on **North America** (`api.us-light-api.com`,
+areaCode 3) — if we had assumed the Singapore default, every call would have
+returned `403 App-Key is not exist` and looked like a broken SDK. `npm run
+check:nexconn` is what turned that into a one-line fix.
+
 The App Secret is never sent to the browser. `app/api/token/route.ts` is the only place that touches
 it, and it only ever returns a user token.
 
 ---
+
+## Verified against live credentials
+
+Run with a real Production App Key on the North America data centre:
+
+| Check | Result |
+|---|---|
+| `npm run check:nexconn` — region + signature | ✅ authenticated on `api.us-light-api.com` |
+| `GET /api/token` — Server API user registration | ✅ real token issued |
+| Group channel create + join (owned by the auctioneer bot) | ✅ |
+| `bidlive:Bid` publish per bid | ✅ |
+| `bidlive:Chat` publish per message | ✅ |
+| `bidlive:System` publish on settlement | ✅ |
+| `/message/private/publish.json` outbid notice | ✅ |
+| **Chat SDK connects in the browser** (init + area code + token + join) | ✅ pill reads `SDK · n` |
+| **Live receive** — counter rises when a message arrives | ✅ `SDK · 1` → `SDK · 2` (`node scripts/verify-sdk.mjs`) |
 
 ## What works today
 
@@ -168,4 +190,6 @@ append and the subscriber fan-out) and use a sticky or pub/sub path for SSE.
 | `npm run build` | Production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `POST /api/dev/reset` | Re-arm fresh demo lots (also a button in the footer) |
+| `npm run check:nexconn` | Find your data centre and verify the signature |
+| `node scripts/verify-sdk.mjs` | Prove the browser SDK receives a message live |
 | `node scripts/shoot.mjs <url> <out.png>` | Screenshot harness used during development |

@@ -11,7 +11,7 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 |---|---|
 | Project name | **BidLive** |
 | One-liner | A live auction that runs inside a chat room — bids are messages, the clock is enforced server-side, and the transcript is the ledger |
-| App Key | `<PASTE YOUR DEVELOPMENT APP KEY HERE>` |
+| App Key | `4z3hlwrv4jtkt` (production environment, North America data centre) |
 | Demo video | `<link>` |
 | Runnable app | `<link>` |
 | Public repo | `<link>` |

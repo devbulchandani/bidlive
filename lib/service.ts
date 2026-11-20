@@ -8,10 +8,12 @@ import {
 import { emitUserNotice, appendEvent, eventsFor, getLot, participants } from "./store";
 import {
   createLotChannel,
+  getUserToken,
   isNexconnConfigured,
   joinLotChannel,
   notifyUser,
   publishCustomMessage,
+  recordMirror,
 } from "./nexconn/server";
 import type { BidRejection, Lot } from "./types";
 
@@ -24,10 +26,28 @@ export type BidResult =
   | { ok: false; rejection: BidRejection };
 
 const SYSTEM_USER = "system:auctioneer";
+/** The room is owned by a bot identity so creation never depends on a bidder. */
+const BOT_ID = process.env.NEXCONN_BOT_USER?.trim() || "bidlive_auctioneer";
+const readyChannels = new Set<string>();
 
 declare global {
   // eslint-disable-next-line no-var
   var __bidliveAttempts: Map<string, number> | undefined;
+}
+
+/**
+ * Make sure the lot's group channel exists (owned by the auctioneer bot) before we
+ * publish into it. Publishing to a channel that was never created is the most
+ * common silent failure in a chat integration.
+ */
+async function ensureChannel(lot: Lot): Promise<boolean> {
+  if (readyChannels.has(lot.channelId)) return true;
+  const bot = await getUserToken(BOT_ID, "Auctioneer");
+  if (!bot.ok) return false;
+  // A "group already exists" error is success for our purposes.
+  await createLotChannel(lot.channelId, lot.title, BOT_ID);
+  readyChannels.add(lot.channelId);
+  return true;
 }
 
 function bidAttempts() {
@@ -48,21 +68,38 @@ function mirror(
   },
 ) {
   if (!isNexconnConfigured()) return;
-  void publishCustomMessage({
-    channelId: lot.channelId,
-    fromUserId: args.userId,
-    messageType: args.messageType,
-    content: args.content,
-    pushContent: args.pushContent,
-    pushData: args.pushData,
-    disableNotification: args.disableNotification,
-  })
+  void ensureChannel(lot)
+    .then(() =>
+      publishCustomMessage({
+        channelId: lot.channelId,
+        fromUserId: args.userId,
+        messageType: args.messageType,
+        content: args.content,
+        pushContent: args.pushContent,
+        pushData: args.pushData,
+        disableNotification: args.disableNotification,
+      }),
+    )
     .then((res) => {
+      recordMirror({
+        at: Date.now(),
+        ok: res.ok,
+        kind: args.messageType,
+        error: res.ok ? undefined : String(res.error),
+        code: res.ok ? undefined : res.code,
+      });
       if (!res.ok && process.env.NODE_ENV !== "production") {
-        console.warn("[nexconn] mirror failed:", res.error);
+        console.warn("[nexconn] mirror failed:", args.messageType, res.error, res.code);
       }
     })
-    .catch(() => {});
+    .catch((err) => {
+      recordMirror({
+        at: Date.now(),
+        ok: false,
+        kind: args.messageType,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
 }
 
 export function placeBid(args: {
@@ -183,7 +220,17 @@ export function placeBid(args: {
         body,
         body,
         JSON.stringify({ lotId: lot.id, type: "outbid" }),
-      );
+      )
+        .then((res) =>
+          recordMirror({
+            at: Date.now(),
+            ok: res.ok,
+            kind: "private:outbid",
+            error: res.ok ? undefined : String(res.error),
+            code: res.ok ? undefined : res.code,
+          }),
+        )
+        .catch(() => undefined);
     }
   }
 
@@ -399,8 +446,7 @@ export function joinLot(lotId: string, userId: string, name: string) {
 
   // Membership so the client SDK receives this lot's messages (and its pushes).
   if (isNexconnConfigured()) {
-    void createLotChannel(lot.channelId, lot.title, lot.sellerId)
-      .catch(() => undefined)
+    void ensureChannel(lot)
       .then(() => joinLotChannel(lot.channelId, userId, name))
       .catch(() => undefined);
   }
