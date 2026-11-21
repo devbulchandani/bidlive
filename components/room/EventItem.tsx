@@ -38,17 +38,22 @@ export function EventItem({
   if (event.kind === "lot_created") {
     return (
       <div className="opening">
-        <div className="label" style={{ marginBottom: 8 }}>
-          Lot opens · {timeOf(event.at)}
+        <div className="thumb">
+          <img src={lot.image} alt="" />
         </div>
-        <h3>{String(m.title ?? lot.title)}</h3>
-        <p>{String(m.description ?? lot.description)}</p>
-        <div className="chips">
-          <span className="chip">Starts {rupee(Number(m.basePrice ?? lot.basePrice))}</span>
-          <span className="chip">+{rupee(Number(m.increment ?? lot.increment))}</span>
-          <span className="chip">
-            {m.reserve ? `Reserve ${rupee(Number(m.reserve))}` : "No reserve"}
-          </span>
+        <div style={{ minWidth: 0 }}>
+          <div className="label" style={{ marginBottom: 6 }}>
+            Lot opens · {timeOf(event.at)}
+          </div>
+          <h3>{String(m.title ?? lot.title)}</h3>
+          <p>{String(m.description ?? lot.description)}</p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <span className="chip">Starts {rupee(Number(m.basePrice ?? lot.basePrice))}</span>
+            <span className="chip">+{rupee(Number(m.increment ?? lot.increment))}</span>
+            <span className="chip">
+              {m.reserve ? `Reserve ${rupee(Number(m.reserve))}` : "No reserve"}
+            </span>
+          </div>
         </div>
       </div>
     );

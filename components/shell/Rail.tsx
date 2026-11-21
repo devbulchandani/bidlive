@@ -4,7 +4,16 @@ import Link from "next/link";
 import type { LotSummary } from "@/lib/types";
 import type { Identity } from "@/lib/client/identity";
 import { initials, rupee } from "@/lib/format";
+import { LotIcon } from "@/components/ui/LotIcon";
 import { Countdown } from "@/components/Countdown";
+
+const TINTS: Record<string, { bg: string; fg: string }> = {
+  camera: { bg: "#eaf0fe", fg: "#2f6fed" },
+  sneaker: { bg: "#fdece6", fg: "#c23c17" },
+  vinyl: { bg: "#e9f4ee", fg: "#1c8b5f" },
+  watch: { bg: "#f3edfb", fg: "#6d45c8" },
+  tag: { bg: "#f1f1ee", fg: "#6d6d71" },
+};
 
 function RailRow({
   lot,
@@ -24,8 +33,15 @@ function RailRow({
       className={`rail-item ${active ? "active" : ""}`}
       aria-current={active ? "page" : undefined}
     >
-      <span className="rail-emoji" aria-hidden>
-        {lot.emoji}
+      <span
+        className="rail-thumb"
+        style={{
+          background: (TINTS[lot.icon] ?? TINTS.tag).bg,
+          color: (TINTS[lot.icon] ?? TINTS.tag).fg,
+        }}
+        aria-hidden
+      >
+        <LotIcon name={lot.icon} size={17} />
       </span>
       <span style={{ minWidth: 0 }}>
         <span className="rail-title">{lot.title}</span>

@@ -46,12 +46,20 @@ redirect into the app, so the rehearsal scripts and any shared links still work.
 
 ### Design
 
-Warm paper, deep ink, one rust accent — a print-catalogue vocabulary rather than the usual dark
-dashboard. A high-contrast serif for display, a quiet grotesque for the interface, and monospace for
-anything that ticks or costs money. Fonts are self-hosted in `public/fonts` (no build-time network
-call, no Google Fonts dependency).
+A neutral product surface rather than a themed dashboard: light grey ground, white cards, a heavy
+geometric sans (Plus Jakarta Sans) for display and Geist Mono for anything that ticks. One accent —
+an auction orange — is reserved for live state and the primary bid action, so colour means something.
 
----
+Two details worth calling out:
+
+- **Real photography.** Every lot carries an actual photograph (Wikimedia Commons; see
+  `public/images/lots/CREDITS.json`). Product shots are `object-fit: contain` on white so nothing is
+  ever cropped mid-object, which is the usual failure of card grids built on stock images.
+- **Hand-drawn icons.** `components/ui/LotIcon.tsx` is a small icon family on a 24px grid at one
+  stroke weight — camera, sneaker, vinyl, watch, tag. The rail tints each lot's tile by category
+  instead of showing an emoji, so the sidebar reads as a designed list rather than a chat log.
+
+Fonts are self-hosted in `public/fonts` (no build-time network call, no Google Fonts dependency).
 
 ## Why chat, not a bid button
 

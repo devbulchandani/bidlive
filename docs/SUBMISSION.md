@@ -42,7 +42,9 @@ BidLive is a live auction where **the room is the auction**. One composer does b
 and you're chatting; type a number at or above the minimum and the send button becomes the bid.
 
 Around it sits the part that makes it usable rather than novel: a persistent rail of every auction
-you are in, each row carrying its own live countdown, so switching lots never means switching tabs.
+you are in, each row carrying its own live countdown and a category icon, so switching lots never
+means switching tabs. Lots are shown with real photography and product-shot framing rather than
+placeholders.
 
 ## 3. The mechanic
 

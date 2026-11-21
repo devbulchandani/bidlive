@@ -21,7 +21,10 @@ export type Lot = {
   title: string;
   subtitle: string;
   emoji: string;
-  imageUrl: string;
+  /** Photo of the item, served from /public/images/lots. */
+  image: string;
+  /** Which custom icon the rail draws for this lot. */
+  icon: string;
   description: string;
   sellerId: string;
   sellerName: string;
@@ -70,7 +73,10 @@ export type LotSummary = {
   title: string;
   subtitle: string;
   emoji: string;
-  imageUrl: string;
+  /** Photo of the item, served from /public/images/lots. */
+  image: string;
+  /** Which custom icon the rail draws for this lot. */
+  icon: string;
   status: LotStatus;
   currentBid: number;
   basePrice: number;

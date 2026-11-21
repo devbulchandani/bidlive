@@ -6,11 +6,18 @@ import { client } from "@/lib/client/api";
 import type { LotSummary } from "@/lib/types";
 import { plural, rupee } from "@/lib/format";
 import { Countdown } from "@/components/Countdown";
-import { Arrow, SiteFoot, SiteNav } from "@/components/site/Chrome";
+import { SiteFoot, SiteNav, StartButton } from "@/components/site/Chrome";
+import {
+  BoltIcon,
+  CheckIcon,
+  GlobeIcon,
+  LedgerIcon,
+  ShieldIcon,
+} from "@/components/ui/LotIcon";
 
 export default function Landing() {
   const [lots, setLots] = useState<LotSummary[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -20,9 +27,9 @@ export default function Landing() {
         .then((res) => {
           if (!alive) return;
           setLots(res.lots);
-          setLoaded(true);
+          setReady(true);
         })
-        .catch(() => setLoaded(true));
+        .catch(() => setReady(true));
     void load();
     const t = setInterval(load, 5000);
     return () => {
@@ -32,92 +39,99 @@ export default function Landing() {
   }, []);
 
   const live = lots.filter((l) => l.status === "live");
-  const hero = live[0];
+  const hero = live[0] ?? lots[0];
   const bids = lots.reduce((n, l) => n + l.bidCount, 0);
+  const recent = [...lots].sort((a, b) => b.bidCount - a.bidCount).slice(0, 3);
 
   return (
     <>
       <SiteNav />
 
       <main>
-        {/* ---------------------------------------------------------- hero */}
-        <section className="wrap">
-          <div className="hero">
-            <div>
-              <div className="eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <i className="dot pulse" style={{ color: "var(--rust)" }} />
-                Live auctions · {plural(live.length, "lot")} open now
-              </div>
+        {/* ------------------------------------------------------------ hero */}
+        <section className="wrap hero">
+          <span className="hero-badge">
+            <i className="dot" style={{ color: "var(--accent)" }} />
+            {ready ? `${plural(live.length, "lot")} live right now` : "Live auctions, in your chat"}
+          </span>
 
-              <h1 className="hero-display">
-                The auction is <em>the chat</em>.
-              </h1>
+          <h1>
+            The auction is <em>the chat</em>.
+          </h1>
 
-              <p className="hero-lede">
-                No bidding form, no second tab. The room where people ask about the lot is the same
-                room where the price moves. Type a number — or tap one — and the clock, the minimum
-                and the record are settled on the server.
-              </p>
+          <p className="hero-sub">
+            No bidding form, no second tab. The room where people ask about the lot is the same room
+            where the price moves — tap a chip or type a number, and the clock and the record are
+            settled on the server.
+          </p>
 
-              <div className="hero-actions">
-                <Link href="/app" className="btn btn-primary" style={{ paddingRight: 9 }}>
-                  Start bidding
-                  <span className="bii">
-                    <Arrow />
-                  </span>
-                </Link>
-                <a href="#how" className="btn btn-ghost">
-                  How it works
-                </a>
-              </div>
+          <div className="hero-cta">
+            <StartButton />
+            <a href="#how" className="btn btn-ghost">
+              How it works
+            </a>
+          </div>
 
-              <div className="hero-meta">
-                <div>
-                  <b>{live.length}</b>
-                  <span>Lots live</span>
-                </div>
-                <div>
-                  <b>{bids}</b>
-                  <span>Bids placed</span>
-                </div>
-                <div>
-                  <b>{loaded ? "180d" : "—"}</b>
-                  <span>History kept</span>
-                </div>
-              </div>
+          <div className="proof">
+            <div className="faces">
+              {["R", "A", "P", "M"].map((f, i) => (
+                <span
+                  className="face"
+                  key={f}
+                  style={{ background: ["#e8502a", "#2f6fed", "#1c8b5f", "#0c0c0d"][i] }}
+                >
+                  {f}
+                </span>
+              ))}
             </div>
+            <span>{plural(bids, "bid")} placed · any name gets you in, no password</span>
+          </div>
 
-            {/* a real lot, not a mockup */}
-            <div className="bezel">
-              <article className="live-card">
-                <div className="live-card-top">
-                  <div>
-                    <div className="label">On the block</div>
-                    <div
-                      className="serif"
-                      style={{ fontSize: 26, letterSpacing: "-0.02em", marginTop: 6 }}
-                    >
-                      {hero ? hero.title : "Waiting for the first lot"}
+          {/* real product, not a mockup */}
+          <div className="cluster">
+            <div className="shot">
+              {hero ? (
+                <>
+                  <img src={hero.image} alt={hero.title} />
+                  <div className="veil" />
+                  <div className="shot-top">
+                    <span className="chip chip-accent" style={{ backdropFilter: "blur(8px)" }}>
+                      <i className="dot pulse" />
+                      live
+                    </span>
+                    <span className="chip">{rupee(hero.currentBid)}</span>
+                  </div>
+                  <div className="shot-bottom">
+                    <div className="shot-caption">
+                      <div className="label" style={{ marginBottom: 3 }}>
+                        On the block
+                      </div>
+                      <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>
+                        {hero.title}
+                      </div>
                     </div>
                   </div>
-                  <span className="chip chip-rust">
-                    <i className="dot pulse" />
-                    live
-                  </span>
-                </div>
+                </>
+              ) : (
+                <div className="skeleton" style={{ position: "absolute", inset: 0 }} />
+              )}
+            </div>
 
-                <div className="live-thumb">
-                  <span className="lot-no">LOT 01</span>
-                  <span aria-hidden>{hero?.emoji ?? "◎"}</span>
+            <div className="pane-stack">
+              <div className="mini">
+                <div className="mini-head">
+                  <span>{hero?.bidCount ? "Leading bid" : "Starting price"}</span>
+                  <span className="label">
+                    {hero?.bidCount ? `${hero.bidCount} bids` : "no bids yet"}
+                  </span>
                 </div>
 
                 <div className="price-row">
-                  <div>
-                    <div className="label">{hero?.bidCount ? "Current bid" : "Starting at"}</div>
-                    <div className="price">{rupee(hero?.currentBid ?? 0)}</div>
-                  </div>
+                  <div className="price">{rupee(hero?.currentBid ?? 0)}</div>
                   <div style={{ textAlign: "right" }}>
-                    <div className="label">Closes in</div>
+                    <div className="label" style={{ marginBottom: 4 }}>
+                      closes in
+                    </div>
                     {hero ? (
                       <Countdown endsAt={hero.endsAt} className="clock" />
                     ) : (
@@ -126,244 +140,389 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <div className="bid-strip">
-                  <span className="label">Bid</span>
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
                   {hero ? (
                     <>
                       <Link
                         href={`/app/${hero.id}`}
-                        className="bid-chip bid-chip-primary"
-                        style={{ display: "inline-flex" }}
+                        className="btn btn-accent btn-sm"
+                        style={{ padding: "8px 14px" }}
                       >
-                        {rupee(hero.nextMin)}
+                        Bid {rupee(hero.nextMin)}
                       </Link>
                       <Link
                         href={`/app/${hero.id}`}
-                        className="bid-chip"
-                        style={{ display: "inline-flex" }}
+                        className="btn btn-ghost btn-sm"
+                        style={{ padding: "8px 14px" }}
                       >
                         {rupee(hero.nextMin + hero.increment)}
                       </Link>
                     </>
                   ) : null}
-                </div>
-
-                <div className="enter-row">
-                  <span className="hint">
-                    {hero ? `${plural(hero.bidCount, "bid")} · ${hero.watchers} watching` : ""}
-                  </span>
-                  <Link href={hero ? `/app/${hero.id}` : "/app"} className="enter-link">
-                    Enter the room
-                    <Arrow size={12} />
+                  <Link
+                    href={hero ? `/app/${hero.id}` : "/app"}
+                    className="hint"
+                    style={{ marginLeft: "auto", alignSelf: "center" }}
+                  >
+                    Enter the room →
                   </Link>
                 </div>
-              </article>
+              </div>
+
+              <div className="mini" style={{ overflow: "hidden" }}>
+                <div className="mini-head">
+                  <span>The room</span>
+                  <span className="label">as it happens</span>
+                </div>
+                <div className="ledger">
+                  {recent.map((lot, i) => (
+                    <div className="ledger-row" key={lot.id}>
+                      <span className="tick">
+                        <CheckIcon size={10} />
+                      </span>
+                      <span className="who">{lot.topName ?? lot.sellerName}</span>
+                      <span style={{ color: "var(--faint)" }}>
+                        {lot.topName ? "bid" : "listed"}
+                      </span>
+                      <span className="amt">{rupee(lot.currentBid)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="hint" style={{ marginTop: 2 }}>
+                  <LedgerIcon size={14} /> Every bid is a stored message — the transcript is the
+                  ledger.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="logos">
+            <div className="cap">Built on</div>
+            <div className="logo-row">
+              <span>Nexconn</span>
+              <span>Chat SDK</span>
+              <span>Server API</span>
+              <span>Push</span>
+              <span>Group Channels</span>
             </div>
           </div>
         </section>
 
-        {/* -------------------------------------------------------- ticker */}
-        <div className="ticker" aria-hidden>
-          <div className="ticker-track">
-            {[0, 1].map((pass) => (
-              <div key={pass} style={{ display: "flex", gap: 42 }}>
-                {(lots.length ? lots : []).map((lot) => (
-                  <span className="ticker-item" key={`${pass}-${lot.id}`}>
-                    <i
-                      className={`dot ${lot.status === "live" ? "pulse" : ""}`}
-                      style={{
-                        color: lot.status === "live" ? "var(--rust)" : "var(--faint)",
-                      }}
-                    />
-                    {lot.title}
-                    <b>{rupee(lot.currentBid)}</b>
-                    <span style={{ color: "var(--faint)" }}>
-                      {lot.status === "live" ? (
-                        <Countdown endsAt={lot.endsAt} />
-                      ) : (
-                        lot.status
-                      )}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ------------------------------------------------ how it works */}
+        {/* ------------------------------------------------------------ how */}
         <section className="wrap section" id="how">
           <div className="section-head">
-            <h2 className="section-title">
-              Three things happen when you <em>type a number</em>.
-            </h2>
-            <div className="eyebrow" style={{ paddingBottom: 6 }}>
-              01 — 03
-            </div>
+            <span className="badge-dark">
+              <BoltIcon size={12} /> How it works
+            </span>
+            <h2>Three things happen when you tap a number.</h2>
+            <p>
+              The bid is a message. That one decision is what removes the second tab, the refresh,
+              and the argument about who was winning.
+            </p>
           </div>
 
-          <div className="beat">
-            <div className="beat-no">01</div>
-            <div>
-              <h3>You bid in the same box you were talking in.</h3>
+          <div className="feature">
+            <div className="feature-copy">
+              <h3>You bid where you were already talking.</h3>
               <p>
                 <code className="mono">550</code> is a bid. “Is the light meter accurate?” is a
-                question. One input, two jobs — so watching a lot and bidding on it never becomes a
+                question. One input does both, so watching a lot and bidding on it is never a
                 decision about which tab you are in.
               </p>
+              <ul className="bullets">
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Chips give the next increment in a single tap
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  The field still takes a jump bid: say ₹4,000 and mean it
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Both land as the same custom message
+                </li>
+              </ul>
             </div>
-            <div className="beat-aside">
-              Chips above the input offer the next increment for a single tap. The field is still
-              there for a jump bid: say ₹4,000 and mean it.
+            <div className="feature-art">
+              <div className="art-card">
+                <div className="art-row">
+                  <span
+                    className="avatar"
+                    style={{ background: "#2f6fed", width: 24, height: 24 }}
+                  >
+                    P
+                  </span>
+                  <span className="grow">Does it come with the case?</span>
+                </div>
+                <div className="art-row solid">
+                  <span className="grow">Arjun</span>
+                  <b className="mono">₹550</b>
+                  <span className="badge badge-leading">leading</span>
+                </div>
+                <div className="art-row accent">
+                  <span className="grow">Riya</span>
+                  <b className="mono">₹620</b>
+                  <span className="badge badge-leading">leading</span>
+                </div>
+                <div style={{ display: "flex", gap: 7, marginTop: 2 }}>
+                  <span className="bid-chip bid-chip-primary">₹650</span>
+                  <span className="bid-chip">₹700</span>
+                  <span className="bid-chip">₹800</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="beat">
-            <div className="beat-no">02</div>
-            <div>
+          <div className="feature flip">
+            <div className="feature-copy">
               <h3>The server holds the clock, not your laptop.</h3>
               <p>
                 Every bid is checked against the lot: is it still open, is it above the minimum, is
                 this person allowed to bid at all. A device with the wrong time still sees the right
-                countdown, because the number comes from the server with every push.
+                countdown, because the number arrives with every push.
               </p>
+              <ul className="bullets">
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  A bid inside the final 30 seconds extends the lot by 30
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Capped at five extensions, so it cannot run all night
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  The extension is announced in the room, not applied quietly
+                </li>
+              </ul>
             </div>
-            <div className="beat-aside">
-              A bid inside the final 30 seconds extends the lot by 30 — capped at five extensions.
-              The extension is announced in the room, not applied quietly.
+            <div className="feature-art">
+              <div className="art-card">
+                <div className="mini-head">
+                  <span>Closes in</span>
+                  <span className="label">lot 01</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+                  <span className="clock clock-urgent" style={{ fontSize: 40 }}>
+                    00:29
+                  </span>
+                  <span className="chip chip-accent">
+                    <i className="dot" />
+                    +30s
+                  </span>
+                </div>
+                <div className="art-row">
+                  <span className="grow">
+                    Bid in the final 30 seconds — the clock extends
+                  </span>
+                </div>
+                <div className="bar">
+                  <i style={{ width: "72%" }} />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="beat">
-            <div className="beat-no">03</div>
-            <div>
+          <div className="feature">
+            <div className="feature-copy">
               <h3>Everyone sees the same card flip.</h3>
               <p>
                 Your bid lands as a message. The moment someone beats it, your card turns from
                 leading to outbid — in place, in the history, for everyone. The person who was
                 leading also gets a push, so they can come back and fight.
               </p>
+              <ul className="bullets">
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  No polling, no refresh — the socket does the telling
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Works while the tab is closed, over push
+                </li>
+              </ul>
             </div>
-            <div className="beat-aside">
-              No polling, no refresh. The room is a Nexconn group channel; the socket does the
-              telling.
+            <div className="feature-art">
+              <div className="art-card">
+                <div
+                  className="bidcard"
+                  style={{ minWidth: 0, width: "100%", justifyContent: "space-between" }}
+                >
+                  <div>
+                    <div className="label">Bid</div>
+                    <div className="amount">₹500</div>
+                  </div>
+                  <span className="badge badge-outbid">outbid</span>
+                </div>
+                <div
+                  className="bidcard leading"
+                  style={{ minWidth: 0, width: "100%", justifyContent: "space-between" }}
+                >
+                  <div>
+                    <div className="label">Bid</div>
+                    <div className="amount">₹550</div>
+                  </div>
+                  <span className="badge badge-leading">leading</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* -------------------------------------------------------- ledger */}
-        <section id="ledger" style={{ borderTop: "1px solid var(--line)" }}>
-          <div className="wrap quote">
-            <blockquote>
-              An auction is an argument about money. <em>Arguments need a transcript.</em>
-            </blockquote>
-            <div>
-              <p className="desc" style={{ fontSize: 15.5 }}>
+        {/* --------------------------------------------------------- ledger */}
+        <section className="band" id="ledger">
+          <div className="wrap section">
+            <div className="section-head">
+              <span className="badge-dark">
+                <LedgerIcon size={12} /> The ledger
+              </span>
+              <h2>An auction is an argument about money.</h2>
+              <p>
                 “I bid six hundred, you closed early.” Every marketplace has that conversation, and
                 almost none can answer it. Here every bid is a stored message in the lot’s channel —
                 ordered, timestamped, recoverable months later.
               </p>
-              <p className="desc" style={{ fontSize: 15.5, marginTop: 16 }}>
-                That is the whole reason the bid lives in the chat rather than in a form beside it.
-                A form leaves a number. A transcript leaves the story of how the number was reached:
-                who asked what, when the clock was extended, who was muted, and what the reserve did.
-              </p>
+            </div>
+
+            <div className="stats">
+              <div className="stat">
+                <b>180d</b>
+                <span>Message history kept by the channel</span>
+              </div>
+              <div className="stat">
+                <b>1</b>
+                <span>Place a bid can come from — the message</span>
+              </div>
+              <div className="stat">
+                <b>0</b>
+                <span>Forms, tabs or refresh buttons</span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ---------------------------------------------------------- bento */}
-        <section className="wrap section" id="built" style={{ paddingTop: 20 }}>
+        {/* ---------------------------------------------------------- built */}
+        <section className="wrap section" id="built">
           <div className="section-head">
-            <h2 className="section-title">
-              Built on Nexconn, <em>not a socket we wrote</em>.
-            </h2>
-            <a
-              href="https://docs.nexconn.ai"
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-ghost btn-sm"
-            >
-              Read the docs
-              <span className="bii">
-                <Arrow size={12} />
-              </span>
-            </a>
+            <span className="badge-dark">
+              <ShieldIcon size={12} /> Built on Nexconn
+            </span>
+            <h2>Not a socket we wrote.</h2>
+            <p>
+              Group channels give us ordered delivery, offline sync and history. The SDK brings push
+              and translation. We spent the time on the auction rules instead.
+            </p>
           </div>
 
-          <div className="bento">
-            <div className="bezel bento-a">
-              <div className="bento-card">
-                <div className="label">The ledger</div>
-                <h3>Every bid is a message, and messages are kept.</h3>
-                <p>
-                  Group channels give us ordered delivery, offline sync and history we do not have
-                  to build. Reopen a lot weeks later and the argument is still there.
-                </p>
-                <div className="stat">180d</div>
-              </div>
+          <div className="feature">
+            <div className="feature-copy">
+              <h3>Moderation you can see.</h3>
+              <p>
+                The auctioneer mutes a shill bidder and their next bid is refused — on the server,
+                in public, in the transcript.
+              </p>
+              <ul className="bullets">
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Mute, extend and close are auctioneer-only
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Sellers cannot bid on their own lot
+                </li>
+              </ul>
             </div>
-
-            <div className="bezel bento-b">
-              <div className="bento-card">
-                <div className="label">Anti-snipe</div>
-                <h3>A bid at 0:29 extends the clock.</h3>
-                <p>
-                  Thirty seconds, five times over. Announced as a message so nobody can claim the
-                  clock moved without them.
-                </p>
-                <div className="chips" style={{ marginTop: "auto", paddingTop: 16 }}>
-                  <span className="chip">+30s</span>
-                  <span className="chip">max ×5</span>
+            <div className="feature-art">
+              <div className="art-card">
+                <div className="art-row">
+                  <span className="grow">Riya was muted by the auctioneer</span>
+                  <span className="badge badge-outbid">muted</span>
+                </div>
+                <div className="art-row">
+                  <span className="grow">Their next bid</span>
+                  <b style={{ color: "var(--accent-ink)" }}>refused</b>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="bezel bento-c">
-              <div className="bento-card">
-                <div className="label">Bidding</div>
-                <h3>One tap, or any number.</h3>
-                <p>Chips for the increment. The field for a jump bid. The same message either way.</p>
-              </div>
+          <div className="feature flip">
+            <div className="feature-copy">
+              <h3>Reach that comes with it.</h3>
+              <p>
+                Because a bid is a message, it can arrive from anywhere a message can: a second
+                device, a translation layer, or a bidding bot working on a maximum you set.
+              </p>
+              <ul className="bullets">
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  Multi-device sync and offline queue
+                </li>
+                <li>
+                  <span className="b-ico">
+                    <CheckIcon size={10} />
+                  </span>
+                  AI translation and voice-to-text on the same channel
+                </li>
+              </ul>
             </div>
-
-            <div className="bezel bento-d">
-              <div className="bento-card">
-                <div className="label">Moderation</div>
-                <h3>Mute a shill, in public.</h3>
-                <p>The auctioneer’s mute is enforced on the server and their next bid is refused.</p>
-              </div>
-            </div>
-
-            <div className="bezel bento-e">
-              <div className="bento-card">
-                <div className="label">Reach</div>
-                <h3>Translation and push come with it.</h3>
-                <p>
-                  The SDK brings AI translation, voice-to-text and offline push — so a lot can run
-                  across languages without extra work.
-                </p>
+            <div className="feature-art">
+              <div className="art-card">
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                  <span className="chip">
+                    <GlobeIcon size={13} /> हिन्दी
+                  </span>
+                  <span className="chip">Bahasa</span>
+                  <span className="chip">English</span>
+                </div>
+                <div className="art-row">
+                  <span className="grow">Voice note</span>
+                  <span style={{ color: "var(--muted)" }}>→</span>
+                  <b className="mono">₹620</b>
+                </div>
+                <div className="hint">
+                  <BoltIcon size={13} /> Same channel, same ledger.
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* --------------------------------------------------------- close */}
-        <section className="wrap closing">
-          <div className="eyebrow" style={{ marginBottom: 18 }}>
+        <section className="closing wrap">
+          <span className="hero-badge" style={{ marginBottom: 20 }}>
+            <i className="dot" style={{ color: "var(--accent)" }} />
             {plural(live.length, "lot")} open right now
-          </div>
+          </span>
           <h2>Go and put a number on something.</h2>
           <p>
             Pick a name, no password. You are bidding in under twenty seconds — and every bid you
             make stays in the room.
           </p>
-          <Link href="/app" className="btn btn-primary" style={{ paddingRight: 9 }}>
-            Start bidding
-            <span className="bii">
-              <Arrow />
-            </span>
-          </Link>
+          <StartButton label="Start bidding" />
         </section>
       </main>
 

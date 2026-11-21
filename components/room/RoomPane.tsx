@@ -372,7 +372,7 @@ export function RoomPane({ lotId }: { lotId: string }) {
             </button>
           </div>
           <div className="hero-thumb">
-            <span aria-hidden>{lot.emoji}</span>
+            <img src={lot.image} alt="" />
           </div>
 
           <p className="desc">{lot.description}</p>

@@ -19,32 +19,33 @@ export function LotCard({
   return (
     <Link
       href={`/app/${lot.id}`}
-      className={`bezel ${featured ? "span-2" : ""}`}
-      style={{
-        display: "block",
-        animation: `rise .5s ${index * 55}ms var(--ease-soft) both`,
-      }}
+      className={featured ? "span-2" : undefined}
+      style={{ display: "block", animation: `rise .5s ${index * 55}ms var(--ease-soft) both` }}
     >
       <article className="lot-card">
-        <div className="live-thumb">
-          <span className="lot-no">LOT {String(index + 1).padStart(2, "0")}</span>
+        <div className="lot-media">
+          <img src={lot.image} alt="" loading="lazy" />
+          <span className="tag">
+            {live ? (
+              <span className="chip chip-accent">
+                <i className="dot pulse" />
+                live
+              </span>
+            ) : (
+              <span className="chip">{lot.status === "closed" ? "sold" : "unsold"}</span>
+            )}
+          </span>
           {lot.watching ? (
-            <span
-              className="chip chip-rust"
-              style={{ position: "absolute", top: 8, right: 8, padding: "3px 8px", fontSize: 10 }}
-            >
-              in room
+            <span className="tag-r">
+              <span className="chip">in room</span>
             </span>
           ) : null}
-          <span className="glyph" aria-hidden>
-            {lot.emoji}
-          </span>
         </div>
 
-        <div className="lot-card-body">
+        <div className="lot-body">
           <h3>{lot.title}</h3>
 
-          <div className="meta">
+          <div className="lot-meta">
             <span>{lot.sellerName}</span>
             <span style={{ color: "var(--faint)" }}>·</span>
             <span>{plural(lot.bidCount, "bid")}</span>
@@ -52,14 +53,14 @@ export function LotCard({
             <span>{plural(lot.watchers, "watcher")}</span>
           </div>
 
-          <div className="foot">
+          <div className="lot-foot">
             <div>
-              <div className="label">{lot.bidCount ? "Current" : "Starting at"}</div>
+              <div className="label">{lot.bidCount ? "Current bid" : "Starting at"}</div>
               <div className="price-sm">{rupee(lot.currentBid)}</div>
             </div>
             <div style={{ textAlign: "right" }}>
               <div className="label">{live ? "Closes in" : "Final"}</div>
-              <span className="mono" style={{ fontSize: 15 }}>
+              <span className="mono" style={{ fontSize: 15, fontWeight: 500 }}>
                 {live ? <Countdown endsAt={lot.endsAt} /> : rupee(lot.currentBid)}
               </span>
             </div>
