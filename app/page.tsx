@@ -261,10 +261,12 @@ export default function Landing() {
                   </span>
                   <span className="grow">Does it come with the case?</span>
                 </div>
-                <div className="art-row solid">
+                <div className="art-row solid" style={{ opacity: 0.62 }}>
                   <span className="grow">Arjun</span>
-                  <b className="mono">₹550</b>
-                  <span className="badge badge-leading">leading</span>
+                  <b className="mono" style={{ textDecoration: "line-through" }}>
+                    ₹550
+                  </b>
+                  <span className="badge badge-outbid">outbid</span>
                 </div>
                 <div className="art-row accent">
                   <span className="grow">Riya</span>
@@ -316,7 +318,7 @@ export default function Landing() {
                   <span className="label">lot 01</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-                  <span className="clock clock-urgent" style={{ fontSize: 40 }}>
+                  <span className="clock" style={{ fontSize: 40, color: "var(--accent)" }}>
                     00:29
                   </span>
                   <span className="chip chip-accent">
