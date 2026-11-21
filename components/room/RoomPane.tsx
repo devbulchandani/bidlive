@@ -6,6 +6,7 @@ import { client } from "@/lib/client/api";
 import { useLotFeed } from "@/lib/client/hooks";
 import { useIdentity } from "@/lib/client/identity-context";
 import { useNexconnBridge } from "@/lib/client/nexconn";
+import { readChannelHistory } from "@/lib/client/nexconn-history";
 import { parseBidInput } from "@/lib/auction";
 import type { LotView } from "@/lib/types";
 import { initials, plural, rupee } from "@/lib/format";
@@ -14,7 +15,7 @@ import { EventItem } from "./EventItem";
 
 export function RoomPane({ lotId }: { lotId: string }) {
   const { identity, ensureIdentity } = useIdentity();
-  const { lot, events, online, offset, error, loading, refresh } = useLotFeed(lotId);
+  const { lot, events, online, offset, error, loading, needsReplay, refresh } = useLotFeed(lotId);
   const bridge = useNexconnBridge(identity, lot?.channelId);
 
   const [text, setText] = useState("");
@@ -23,6 +24,8 @@ export function RoomPane({ lotId }: { lotId: string }) {
   const [nudge, setNudge] = useState(false);
   const [alertsOn, setAlertsOn] = useState(false);
   const [details, setDetails] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const restored = useRef(false);
 
   const joined = useRef<string | null>(null);
   const streamRef = useRef<HTMLDivElement>(null);
@@ -38,6 +41,38 @@ export function RoomPane({ lotId }: { lotId: string }) {
       .then(() => window.dispatchEvent(new Event("bidlive:refresh-lots")))
       .catch(() => undefined);
   }, [identity, lotId]);
+
+  useEffect(() => {
+    if (!needsReplay || !lot || !identity || bridge.status !== "connected") return;
+    if (restored.current) return;
+    restored.current = true;
+
+    let cancelled = false;
+    setRestoring(true);
+
+    void (async () => {
+      try {
+        // the join may still be in flight when the socket comes up, so give the
+        // channel a second chance before concluding the transcript is empty
+        let messages = await readChannelHistory(lot.channelId);
+        if (!cancelled && messages.length === 0) {
+          await new Promise((r) => setTimeout(r, 1400));
+          if (!cancelled) messages = await readChannelHistory(lot.channelId);
+        }
+        if (cancelled || messages.length === 0) return;
+        await client.rehydrate(lotId, messages);
+        if (!cancelled) await refresh();
+      } catch {
+        /* an empty projection is not fatal — the room just starts clean */
+      } finally {
+        if (!cancelled) setRestoring(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [needsReplay, lot, identity, bridge.status, lotId, refresh]);
 
   useEffect(() => {
     if (!stick.current) return;
@@ -225,6 +260,7 @@ export function RoomPane({ lotId }: { lotId: string }) {
             <i className={`dot ${live && online ? "pulse" : ""}`} />
             {live ? (online ? "live" : "…") : "closed"}
           </span>
+          {restoring ? <span className="chip chip-accent">restoring…</span> : null}
           {bridge.status === "connected" ? (
             <span className="chip" title={`Nexconn socket · ${bridge.received} messages received`}>
               SDK {bridge.received}

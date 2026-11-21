@@ -9,6 +9,14 @@ type Store = {
   seq: Map<string, number>;
   listeners: Map<string, Set<Listener>>;
   userListeners: Map<string, Set<Listener>>;
+  /** Lots whose history has already been replayed out of Nexconn. */
+  hydrated: Set<string>;
+  /**
+   * A demo reset means "clean slate for this session": the transcript in Nexconn
+   * still holds the old bids, so we deliberately stop replaying until the process
+   * restarts. Otherwise a reset would immediately re-import what it just cleared.
+   */
+  replayDisabled: boolean;
   bootedAt: number;
 };
 
@@ -99,6 +107,8 @@ function init(): Store {
     seq: new Map(),
     listeners: new Map(),
     userListeners: new Map(),
+    hydrated: new Set(),
+    replayDisabled: false,
     bootedAt: Date.now(),
   };
   for (const lot of seedLots()) {
@@ -131,13 +141,45 @@ function init(): Store {
 
 export function store(): Store {
   if (!globalThis.__bidlive) globalThis.__bidlive = init();
-  return globalThis.__bidlive;
+  const s = globalThis.__bidlive;
+  // A hot reload can hand us a store created before a field existed.
+  if (!(s.hydrated instanceof Set)) s.hydrated = new Set();
+  if (typeof s.replayDisabled !== "boolean") s.replayDisabled = false;
+  return s;
 }
 
 /** Test/demo helper: wipe everything and re-seed fresh, live lots. */
 export function resetStore() {
   globalThis.__bidlive = init();
+  store().replayDisabled = true;
   return store();
+}
+
+/* ------------------------------------------------------------------ replay */
+
+export function replayAllowed() {
+  return !store().replayDisabled;
+}
+
+export function isHydrated(lotId: string) {
+  return store().hydrated.has(lotId);
+}
+
+export function markHydrated(lotId: string) {
+  store().hydrated.add(lotId);
+}
+
+/** True when the local log holds nothing but the catalogue card. */
+export function needsReplay(lotId: string) {
+  if (!replayAllowed() || isHydrated(lotId)) return false;
+  const relevant = eventsFor(lotId).filter((e) => e.kind !== "lot_created");
+  return relevant.length === 0;
+}
+
+/** Replayed events carry their original sequence; the counter must follow them. */
+export function bumpSeq(lotId: string, seq: number) {
+  const s = store();
+  if (seq >= (s.seq.get(lotId) ?? 1)) s.seq.set(lotId, seq + 1);
 }
 
 export function getLot(id: string): Lot | undefined {
@@ -196,6 +238,8 @@ export function eventsFor(lotId: string): AuctionEvent[] {
 
 export type AppendInput = {
   lotId: string;
+  /** Set when replaying from the transcript, so the original order is preserved. */
+  seq?: number;
   kind: EventKind;
   userId?: string;
   name?: string;
@@ -211,8 +255,8 @@ export type AppendInput = {
  */
 export function appendEvent(input: AppendInput): AuctionEvent {
   const s = store();
-  const seq = (s.seq.get(input.lotId) ?? 1) + 0;
-  s.seq.set(input.lotId, seq + 1);
+  const seq = input.seq ?? s.seq.get(input.lotId) ?? 1;
+  if (seq >= (s.seq.get(input.lotId) ?? 1)) s.seq.set(input.lotId, seq + 1);
 
   const event: AuctionEvent = {
     id: `${input.lotId}:${seq}`,

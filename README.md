@@ -113,6 +113,35 @@ Two entry points, one rule set, so they cannot drift.
 
 ---
 
+## Where the data lives (there is no database)
+
+On purpose. Two layers, both Nexconn:
+
+| Layer | What it holds | Lifetime |
+|---|---|---|
+| **Process memory** (`lib/store.ts`) | the live projection: lots, current top bid, sequence, watchers, mute list | until restart — it is a cache, not the record |
+| **Nexconn channel per lot** | every bid, chat and settlement as a custom message | 180 days |
+
+On a cold start the projection is empty, so the room **replays itself out of the
+transcript**. The browser is the component holding an authenticated chat session, so it
+reads the channel history through the SDK and posts it to `/api/lots/[id]/rehydrate`;
+the server replays those messages through the same rules that accepted them:
+
+- bids are re-checked (right lot, right sender, integer amount, seller excluded);
+- sequence numbers are **re-issued** in chronological order, because the original
+  numbers were per-process and restart with the server;
+- a channel accumulates every demo run, so replay finds the start of the current
+  round — the last settlement, or the first bid that breaks the rule that every
+  accepted bid must be higher than the one before it;
+- anything that could not have been produced by the live rules is dropped.
+
+That last point is the trust boundary: a client may hand the server a transcript, but it
+cannot hand it a fiction the auction engine would have refused. The client still never
+publishes a bid directly.
+
+`/api/dev/reset` deliberately disables replay for the rest of the session — otherwise a
+reset would immediately re-import the bids it just cleared.
+
 ## Nexconn integration
 
 | Capability | How it's used | Where |
@@ -189,6 +218,7 @@ Run with a real Production App Key on the North America data centre:
 - [x] Outbid + settlement notices, in-app and as browser notifications
 - [x] SSE fast path with reconnect, gap detection and resync
 - [x] Mobile layout that leads with price, clock and bid box
+- [x] Cold start replays the auction out of the Nexconn transcript (no database)
 - [x] Degrades to a local bus with an honest badge when credentials are absent
 
 ## Deliberately out of scope

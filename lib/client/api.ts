@@ -24,6 +24,7 @@ export type LotResponse = {
   ok: true;
   lot: LotView;
   events: AuctionEvent[];
+  needsReplay?: boolean;
   serverTime: number;
 };
 
@@ -53,6 +54,11 @@ export const client = {
   token: (userId: string, name: string) =>
     getJSON<{ configured: boolean; token: string | null }>(
       `/api/token?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}`,
+    ),
+  rehydrate: (id: string, messages: unknown[]) =>
+    postJSON<{ applied: number; skipped: number }>(
+      `/api/lots/${encodeURIComponent(id)}/rehydrate`,
+      { messages },
     ),
   action: (id: string, body: Record<string, unknown>) =>
     postJSON<ActionResponse>(`/api/lots/${encodeURIComponent(id)}/action`, body),

@@ -21,6 +21,7 @@ export function useLotFeed(lotId: string) {
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsReplay, setNeedsReplay] = useState(false);
   const lastSeq = useRef(0);
 
   const refresh = useCallback(async () => {
@@ -28,6 +29,7 @@ export function useLotFeed(lotId: string) {
     setLot(res.lot);
     setEvents(res.events);
     setOffset(res.serverTime - Date.now());
+    setNeedsReplay(Boolean(res.needsReplay));
     lastSeq.current = res.events.reduce((m, e) => Math.max(m, e.seq), 0);
     setLoading(false);
   }, [lotId]);
@@ -84,7 +86,7 @@ export function useLotFeed(lotId: string) {
 
   const applyLot = useCallback((next: LotView) => setLot(next), []);
 
-  return { lot, events, online, offset, error, loading, refresh, applyLot };
+  return { lot, events, online, offset, error, loading, needsReplay, refresh, applyLot };
 }
 
 /** Private notices for one user: outbid warnings and settlement results. */

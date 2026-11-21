@@ -93,6 +93,17 @@ Decisions worth defending in the PDF:
 | Pre-message callback (optional) | A rejected bid never reaches anyone | Post-hoc deletion, which is worse |
 | 180-day history | The audit trail an auction dispute needs | Our own database |
 
+## 5a. Persistence — the transcript *is* the database
+
+There is no database in this project. The server keeps a projection in memory; the durable
+record is the lot's Nexconn channel. On a cold start the room reads its own history back
+through the SDK and replays it: bids are re-validated, sequence numbers re-issued, and the
+current round located by the last settlement (or the first bid that breaks the rule that bids
+must rise). Anything the auction engine would have refused is dropped.
+
+This is the claim in section 3 made literal, and it answers the first question a judge asks
+about a demo like this — "what happens when you restart it?"
+
 ## 6. Security
 
 The App Secret exists only on the server. The browser receives a **user token**, issued by
