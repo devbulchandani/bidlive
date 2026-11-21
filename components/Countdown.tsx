@@ -5,19 +5,19 @@ import { clock } from "@/lib/format";
 import { useNow } from "@/lib/client/hooks";
 
 /**
- * Countdown rendered against the *server's* clock (offset-adjusted), not the
- * device's. A phone that is two minutes slow still sees the truth.
+ * Counts against the server's clock (offset-adjusted), so a device with the wrong
+ * time still shows the right moment.
  */
 export function Countdown({
   endsAt,
-  offset,
+  offset = 0,
   urgentMs = 30_000,
   onExpire,
   className = "",
   showSeconds = true,
 }: {
   endsAt: number;
-  offset: number;
+  offset?: number;
   urgentMs?: number;
   onExpire?: () => void;
   className?: string;
@@ -40,10 +40,7 @@ export function Countdown({
   }, [remaining, onExpire]);
 
   return (
-    <span
-      className={`num ${urgent ? "urgent" : ""} ${className}`}
-      style={{ fontVariantNumeric: "tabular-nums" }}
-    >
+    <span className={`mono ${urgent ? "clock-urgent" : ""} ${className}`}>
       {remaining === 0 ? "closed" : clock(remaining)}
     </span>
   );

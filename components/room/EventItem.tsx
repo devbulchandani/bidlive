@@ -3,9 +3,7 @@
 import type { AuctionEvent, LotView } from "@/lib/types";
 import { colorFor, initials, rupee, timeOf } from "@/lib/format";
 
-function m(event: AuctionEvent) {
-  return (event.meta ?? {}) as Record<string, unknown>;
-}
+const meta = (event: AuctionEvent) => (event.meta ?? {}) as Record<string, unknown>;
 
 function SysLine({
   icon,
@@ -35,23 +33,22 @@ export function EventItem({
   meId: string;
   recalled: Set<string>;
 }) {
-  const meta = m(event);
+  const m = meta(event);
 
   if (event.kind === "lot_created") {
     return (
       <div className="opening">
-        <div className="eyebrow">Lot opens</div>
-        <h3 className="serif">{String(meta.title ?? lot.title)}</h3>
-        <p>{String(meta.description ?? lot.description)}</p>
-        <div className="rule-chips">
-          <span className="chip">Starts {rupee(Number(meta.basePrice ?? lot.basePrice))}</span>
+        <div className="label" style={{ marginBottom: 8 }}>
+          Lot opens · {timeOf(event.at)}
+        </div>
+        <h3>{String(m.title ?? lot.title)}</h3>
+        <p>{String(m.description ?? lot.description)}</p>
+        <div className="chips">
+          <span className="chip">Starts {rupee(Number(m.basePrice ?? lot.basePrice))}</span>
+          <span className="chip">+{rupee(Number(m.increment ?? lot.increment))}</span>
           <span className="chip">
-            +{rupee(Number(meta.increment ?? lot.increment))} increments
+            {m.reserve ? `Reserve ${rupee(Number(m.reserve))}` : "No reserve"}
           </span>
-          <span className="chip">
-            {meta.reserve ? `Reserve ${rupee(Number(meta.reserve))}` : "No reserve"}
-          </span>
-          <span className="chip">Opened {timeOf(event.at)}</span>
         </div>
       </div>
     );
@@ -61,31 +58,37 @@ export function EventItem({
     const isLeading = lot.status === "live" && lot.top?.seq === event.seq;
     const isWon = lot.winner?.seq === event.seq;
     const isRecalled = recalled.has(event.id);
-    const state = isWon ? "won" : isRecalled ? "outbid" : isLeading ? "leading" : "outbid";
-    const color = colorFor(event.userId ?? "x");
+    const mine = event.userId === meId;
 
     return (
       <div className="msg">
-        <span className="avatar" style={{ background: color }}>
+        <span className="avatar" style={{ background: colorFor(event.userId ?? "x") }}>
           {initials(event.name ?? "?")}
         </span>
         <div className="msg-body">
           <div className="msg-name">
             <b>{event.name ?? "Bidder"}</b>
-            {event.userId === meId ? <span className="pill sm">you</span> : null}
-            <span style={{ color: "var(--ink-mute)", fontSize: 11 }}>{timeOf(event.at)}</span>
+            {mine ? <span style={{ color: "var(--rust)" }}>you</span> : null}
+            <span className="mono" style={{ fontSize: 10.5, color: "var(--faint)" }}>
+              {timeOf(event.at)}
+            </span>
           </div>
+
           <div className={`bidcard ${isLeading || isWon ? "leading" : "outbid"}`}>
             <div>
-              <div className="price-label">{isRecalled ? "withdrawn" : "bid"}</div>
-              <div className="amount num">{rupee(event.amount ?? 0)}</div>
+              <div className="label">{isRecalled ? "Withdrawn" : "Bid"}</div>
+              <div className="amount">{rupee(event.amount ?? 0)}</div>
             </div>
-            <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
-              {state === "won" ? <span className="badge won">won</span> : null}
-              {state === "leading" ? <span className="badge leading">leading</span> : null}
-              {state === "outbid" && !isRecalled ? <span className="badge outbid">outbid</span> : null}
-              {isRecalled ? <span className="badge outbid">recalled</span> : null}
-              <span className="badge seq">#{event.seq}</span>
+            <div
+              style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}
+            >
+              {isWon ? <span className="badge badge-won">won</span> : null}
+              {isLeading ? <span className="badge badge-leading">leading</span> : null}
+              {!isWon && !isLeading && !isRecalled ? (
+                <span className="badge badge-outbid">outbid</span>
+              ) : null}
+              {isRecalled ? <span className="badge badge-outbid">recalled</span> : null}
+              <span className="badge badge-seq">#{event.seq}</span>
             </div>
           </div>
         </div>
@@ -97,28 +100,27 @@ export function EventItem({
     return (
       <SysLine icon="↺">
         <b>{event.name ?? "Bidder"}</b> withdrew a bid of {rupee(event.amount ?? 0)} — the lead
-        recalculated automatically
+        recalculated from the record
       </SysLine>
     );
   }
 
   if (event.kind === "lot_extended") {
-    const reason = String(meta.reason ?? "");
-    const endsAt = Number(meta.newEndsAt ?? meta.endsAt ?? event.amount ?? lot.endsAt);
-    const closing = reason === "auctioneer_closing";
+    const reason = String(m.reason ?? "");
+    const endsAt = Number(m.newEndsAt ?? m.endsAt ?? event.amount ?? lot.endsAt);
     return (
-      <SysLine icon={closing ? "⏳" : "⏱"} alert>
-        {closing ? (
+      <SysLine icon={reason === "auctioneer_closing" ? "◷" : "↗"} alert>
+        {reason === "auctioneer_closing" ? (
           <>
-            The auctioneer is closing this lot — <b>{timeOf(endsAt)}</b>
+            The auctioneer is closing this lot at <b>{timeOf(endsAt)}</b>
           </>
         ) : reason === "auctioneer_extension" ? (
           <>
-            Auctioneer added time — the lot now closes at <b>{timeOf(endsAt)}</b>
+            The auctioneer added time — closes at <b>{timeOf(endsAt)}</b>
           </>
         ) : (
           <>
-            Bid in the final 30 seconds — <b>the clock extends</b>, lot now closes at{" "}
+            Bid in the final 30 seconds — <b>the clock extends</b>, closing at{" "}
             <b>{timeOf(endsAt)}</b>
           </>
         )}
@@ -127,15 +129,14 @@ export function EventItem({
   }
 
   if (event.kind === "lot_settled") {
-    const unsold = Boolean(meta.unsold);
-    if (unsold) {
+    if (Boolean(m.unsold)) {
       return (
         <div className="settle unsold">
           <div className="stamp">Passed in</div>
-          <h3 className="serif">Unsold</h3>
-          <p style={{ color: "var(--ink-dim)", margin: 0, fontSize: 13.5 }}>
-            {meta.reason === "reserve_not_met"
-              ? `The highest bid didn't reach the reserve of ${rupee(Number(meta.reserve ?? 0))}.`
+          <h3>Unsold</h3>
+          <p>
+            {m.reason === "reserve_not_met"
+              ? `The highest bid did not reach the reserve of ${rupee(Number(m.reserve ?? 0))}.`
               : "No bids came in before the clock ran out."}
           </p>
         </div>
@@ -143,24 +144,23 @@ export function EventItem({
     }
     return (
       <div className="settle">
-        <div className="stamp">Sold</div>
-        <h3 className="serif">{event.name ?? "Winner"}</h3>
-        <div className="final num">{rupee(event.amount ?? 0)}</div>
-        <p style={{ color: "var(--ink-mute)", margin: 0, fontSize: 12.5 }}>
-          {String(meta.bidCount ?? lot.bidCount)} bids · {String(meta.extensions ?? 0)} clock
-          extensions · settled {timeOf(event.at)}
+        <div className="stamp">Sold · hammer down</div>
+        <h3>{event.name ?? "Winner"}</h3>
+        <div className="final">{rupee(event.amount ?? 0)}</div>
+        <p>
+          {String(m.bidCount ?? lot.bidCount)} bids · {String(m.extensions ?? 0)} clock extensions ·
+          settled {timeOf(event.at)}
         </p>
       </div>
     );
   }
 
   if (event.kind === "mod") {
-    const action = String(meta.action ?? "");
     return (
-      <SysLine icon="⚑" alert>
+      <SysLine icon="⊘" alert>
         <b>{event.name ?? "A bidder"}</b>{" "}
-        {action === "mute"
-          ? "was muted by the auctioneer — their bids will be refused"
+        {String(m.action) === "mute"
+          ? "was muted by the auctioneer — their bids are now refused"
           : "was unmuted"}
       </SysLine>
     );
@@ -168,28 +168,28 @@ export function EventItem({
 
   if (event.kind === "join") {
     return (
-      <SysLine icon="＋">
-        <b>{event.name ?? "Someone"}</b> joined the room
+      <SysLine icon="+">
+        <b>{event.name ?? "Someone"}</b> entered the room
       </SysLine>
     );
   }
 
   if (event.kind === "chat") {
-    const color = colorFor(event.userId ?? "x");
+    const mine = event.userId === meId;
     return (
       <div className="msg">
-        <span className="avatar" style={{ background: color }}>
+        <span className="avatar" style={{ background: colorFor(event.userId ?? "x") }}>
           {initials(event.name ?? "?")}
         </span>
         <div className="msg-body">
           <div className="msg-name">
             <b>{event.name ?? "Guest"}</b>
-            {event.userId === meId ? <span className="pill sm">you</span> : null}
-            <span style={{ color: "var(--ink-mute)", fontSize: 11 }}>{timeOf(event.at)}</span>
+            {mine ? <span style={{ color: "var(--rust)" }}>you</span> : null}
+            <span className="mono" style={{ fontSize: 10.5, color: "var(--faint)" }}>
+              {timeOf(event.at)}
+            </span>
           </div>
-          <div className={`bubble ${event.userId === meId ? "mine" : ""}`}>
-            {event.text ?? ""}
-          </div>
+          <div className={`bubble ${mine ? "mine" : ""}`}>{event.text ?? ""}</div>
         </div>
       </div>
     );

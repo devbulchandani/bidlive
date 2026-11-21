@@ -41,7 +41,10 @@ export type ActionResponse = {
 };
 
 export const client = {
-  lots: () => getJSON<{ lots: LotSummary[] }>("/api/lots"),
+  lots: (userId?: string) =>
+    getJSON<{ lots: LotSummary[] }>(
+      userId ? `/api/lots?userId=${encodeURIComponent(userId)}` : "/api/lots",
+    ),
   lot: (id: string) => getJSON<LotResponse>(`/api/lots/${encodeURIComponent(id)}`),
   health: () =>
     getJSON<{ nexconnConfigured: boolean; nexconnApiBase: string | null; lots: number }>(

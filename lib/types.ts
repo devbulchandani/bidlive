@@ -89,6 +89,8 @@ export type LotSummary = {
   reserve: number | null;
   winner: TopBid | null;
   channelId: string;
+  /** Whether the requesting user is in this room. */
+  watching?: boolean;
 };
 
 export type BidRejection = {

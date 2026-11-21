@@ -12,10 +12,12 @@ const PERSONAS = [
 
 export function IdentityGate({
   onPick,
+  onClose,
   title = "Take a seat",
-  subtitle = "Pick a name — it's how the room will know you. Open a second window with a different name to bid against yourself.",
+  subtitle = "A name is all it takes. Open a second window with a different name to bid against yourself.",
 }: {
   onPick: (name: string) => void;
+  onClose?: () => void;
   title?: string;
   subtitle?: string;
 }) {
@@ -23,27 +25,48 @@ export function IdentityGate({
 
   const submit = () => {
     const name = value.trim();
-    if (!name) return;
-    onPick(name);
+    if (name) onPick(name);
   };
 
   return (
     <div className="gate" role="dialog" aria-modal="true" aria-label="Choose your name">
       <div className="gate-card">
-        <h2 className="serif">{title}</h2>
-        <p>{subtitle}</p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>
+              Your name in the room
+            </div>
+            <h2>{title}</h2>
+          </div>
+          {onClose ? (
+            <button className="icon-btn" onClick={onClose} aria-label="Close">
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+                <path
+                  d="M1 1l10 10M11 1L1 11"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          ) : null}
+        </div>
 
-        <div className="persona-row">
+        <p style={{ marginTop: 10 }}>{subtitle}</p>
+
+        <div className="personas">
           {PERSONAS.map((p) => (
-            <button
-              key={p.name}
-              className="persona"
-              onClick={() => setValue(p.name)}
-              type="button"
-            >
+            <button key={p.name} className="persona" type="button" onClick={() => setValue(p.name)}>
               <span className="swatch" style={{ background: colorFor(p.name.toLowerCase()) }} />
               {p.name}
-              <span style={{ color: "var(--ink-mute)", fontSize: 11 }}>{p.note}</span>
+              <span style={{ color: "var(--faint)", fontSize: 11 }}>{p.note}</span>
             </button>
           ))}
         </div>
@@ -58,16 +81,33 @@ export function IdentityGate({
           aria-label="Your name"
         />
 
-        <button className="btn gold" style={{ width: "100%" }} onClick={submit} disabled={!value.trim()}>
-          <span className="avatar" style={{ background: colorFor(value.toLowerCase()), width: 20, height: 20, fontSize: 10 }}>
-            {initials(value)}
-          </span>
-          Enter the room
+        <button
+          className="btn btn-primary"
+          style={{ width: "100%", paddingRight: 9 }}
+          onClick={submit}
+          disabled={!value.trim()}
+        >
+          {value.trim() ? (
+            <>
+              <span
+                className="avatar"
+                style={{ background: colorFor(value.toLowerCase()), width: 24, height: 24 }}
+              >
+                {initials(value)}
+              </span>
+              Enter the room
+            </>
+          ) : (
+            "Enter the room"
+          )}
         </button>
 
-        <p className="note" style={{ marginTop: 16, marginBottom: 0 }}>
-          Choosing <b>Meera</b> or <b>Dev</b> signs you in as an auctioneer — those are the
-          sellers of the seeded lots, so you&apos;ll get the auction controls.
+        <p
+          className="hint"
+          style={{ marginTop: 16, lineHeight: 1.5, display: "block" }}
+        >
+          Choosing <b>Meera</b> or <b>Dev</b> signs you in as an auctioneer — they own the seeded
+          lots, so you get the controls.
         </p>
       </div>
     </div>

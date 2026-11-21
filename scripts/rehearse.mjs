@@ -55,15 +55,15 @@ const riya = await ctxA.newPage();
 const arjun = await ctxB.newPage();
 
 await Promise.all([
-  riya.goto(`${BASE}/lot/${LOT}?as=Riya`, { waitUntil: "domcontentloaded" }),
-  arjun.goto(`${BASE}/lot/${LOT}?as=Arjun`, { waitUntil: "domcontentloaded" }),
+  riya.goto(`${BASE}/app/${LOT}?as=Riya`, { waitUntil: "domcontentloaded" }),
+  arjun.goto(`${BASE}/app/${LOT}?as=Arjun`, { waitUntil: "domcontentloaded" }),
 ]);
 
 // Wait for both SDKs to report a live socket.
 const sdkPill = (page) =>
   page.evaluate(() => {
-    const pills = [...document.querySelectorAll(".pill")].map((el) => el.textContent?.trim() ?? "");
-    return pills.find((t) => t.startsWith("SDK")) ?? "(none)";
+    const chips = [...document.querySelectorAll(".chip")].map((el) => el.textContent?.trim() ?? "");
+    return chips.find((t) => t.startsWith("SDK")) ?? "(none)";
   });
 
 await sleep(9000);

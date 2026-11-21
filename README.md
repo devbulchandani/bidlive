@@ -21,15 +21,35 @@ npm run dev                  # http://localhost:3000
 It runs end-to-end with **no credentials at all**: the auction uses a local event bus and the UI
 honestly reports `Nexconn: local bus`. Add credentials and the same room is backed by Nexconn.
 
+### The two screens
+
+| Route | What it is |
+|---|---|
+| `/` | The landing page — what this is, and a live lot you can bid on without signing up |
+| `/app` | The app: every lot, your rooms first, the first lot featured |
+| `/app/[lot]` | A room — the auction, with a **persistent rail** listing every auction you are in |
+
+The rail is the reason there are not five browser tabs: it stays put while the lot in the middle
+changes, and each row carries its own live countdown.
+
 ### Try the demo in 60 seconds
 
-1. Open <http://localhost:3000/lot/yashica?as=Riya> — you're Riya, bidding.
-2. Open <http://localhost:3000/lot/yashica?as=Arjun> in a second window — you're Arjun.
+1. Open <http://localhost:3000/app/yashica?as=Riya> — you're Riya, bidding.
+2. Open <http://localhost:3000/app/yashica?as=Arjun> in a second window — you're Arjun.
 3. Bid in one window; watch the other flip to `LEADING` / `OUTBID`.
-4. Open <http://localhost:3000/lot/yashica?as=Meera> — Meera is the seller, so you get the
+4. Enter a second lot and switch between them in the rail — both countdowns keep running.
+5. Open <http://localhost:3000/app/yashica?as=Meera> — Meera is the seller, so you get the
    auctioneer controls: **+60s**, **Close in 30s**, and a mute list.
 
-`?as=Name` is a demo shortcut; it just sets the same identity the modal would.
+`?as=Name` is a demo shortcut; it just sets the same identity the gate would. Old `/lot/x` links
+redirect into the app, so the rehearsal scripts and any shared links still work.
+
+### Design
+
+Warm paper, deep ink, one rust accent — a print-catalogue vocabulary rather than the usual dark
+dashboard. A high-contrast serif for display, a quiet grotesque for the interface, and monospace for
+anything that ticks or costs money. Fonts are self-hosted in `public/fonts` (no build-time network
+call, no Google Fonts dependency).
 
 ---
 
@@ -149,7 +169,9 @@ Run with a real Production App Key on the North America data centre:
 
 ## What works today
 
-- [x] Lobby with live countdowns, current bid, watcher counts
+- [x] Landing page with a live lot, real countdown and working bid links
+- [x] Persistent rail: switch between every auction you are in, each with its own timer
+- [x] Overview: featured lot, "in room" markers, per-lot countdowns
 - [x] Lot room with bid cards, `LEADING` / `OUTBID` / `WON` states rendered in place
 - [x] Server-authoritative bidding: minimum increment, banded increments, rate limit
 - [x] Anti-snipe extension, capped, announced as a message

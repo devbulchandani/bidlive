@@ -144,13 +144,17 @@ export function allLots(): Lot[] {
   return [...store().lots.values()];
 }
 
-export function listLotSummaries(): LotSummary[] {
+export function listLotSummaries(userId?: string): LotSummary[] {
   return allLots()
     .sort((a, b) => {
       if (a.status !== b.status) return a.status === "live" ? -1 : 1;
       return a.endsAt - b.endsAt;
     })
-    .map(summarise);
+    .map((lot) => {
+      const summary = summarise(lot);
+      if (userId) summary.watching = lot.watcherIds.includes(userId);
+      return summary;
+    });
 }
 
 export function summarise(lot: Lot): LotSummary {

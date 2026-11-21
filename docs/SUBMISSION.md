@@ -41,6 +41,9 @@ no record when a dispute starts.
 BidLive is a live auction where **the room is the auction**. One composer does both jobs: type text
 and you're chatting; type a number at or above the minimum and the send button becomes the bid.
 
+Around it sits the part that makes it usable rather than novel: a persistent rail of every auction
+you are in, each row carrying its own live countdown, so switching lots never means switching tabs.
+
 ## 3. The mechanic
 
 > **A bid is only valid if the auctioneer's clock and the minimum increment say so — and the room's
