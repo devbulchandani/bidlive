@@ -14,3 +14,6 @@ next-env.d.ts
 
 # review screenshots
 /docs/shots
+
+# aws cli session (do not commit)
+.aws

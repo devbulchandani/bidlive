@@ -18,7 +18,28 @@ SSE streams. That rules some AWS services out immediately and makes one obvious.
 about **$7.50/month**. t3.small (2 GB) is ~$15/month but builds comfortably. Nothing else in
 this design costs money — Nexconn's free plan covers 10,000 MAU.
 
-## EC2 in ten minutes
+## One command
+
+```bash
+aws login                                   # in your own Terminal — it needs a TTY
+AWS_PROFILE=default AWS_REGION=us-east-1 ./deploy/aws-deploy.sh
+```
+
+The script reads the Nexconn credentials from `.env.local`, launches a t3.micro with
+[`deploy/ec2-user-data.sh`](../deploy/ec2-user-data.sh), and waits for `/api/health`.
+It needs no SSH: the instance points Caddy at its own public IP in dashed form, so
+`sslip.io` resolves it and Let's Encrypt issues a real certificate. The result is
+`https://<dashed-ip>.sslip.io`.
+
+Teardown is one command too — [`deploy/aws-teardown.sh`](../deploy/aws-teardown.sh) terminates
+the instance and removes the security group.
+
+> The deploy script injects the App Secret into EC2 user data, because that is the only way to
+> provision without SSH. Instance metadata is not reachable from the internet, but anyone with
+> API access to your account can read it. Acceptable for a hackathon instance you terminate
+> afterwards; rotate the App Secret in the Nexconn console once judging ends.
+
+## EC2 by hand
 
 ### 1. Authenticate the CLI
 
