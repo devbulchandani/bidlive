@@ -10,7 +10,8 @@
     "seed": "node --experimental-strip-types scripts/seed.ts",
     "check:nexconn": "node scripts/check-nexconn.mjs",
     "record": "node scripts/record.mjs",
-    "cards": "python3 scripts/cards.py"
+    "cards": "python3 scripts/cards.py",
+    "video": "node scripts/video.mjs"
   },
   "dependencies": {
     "@nexconn/chat": "26.5.1",

@@ -230,8 +230,32 @@ would have cost a day and none of them makes the auction mechanic more convincin
 
 ## Recording the demo
 
+Two builds are produced:
+
+| File | What it is |
+|---|---|
+| `docs/video/bidlive-full.mp4` | **The submission cut** — 2:07, 1920×1080, narrated, one chapter per feature, captioned |
+| `docs/video/transcript.md` | Chapter-by-chapter narration with timings measured from the render |
+| `docs/video/voiceover.txt` | Narration only, for re-recording in Clipchamp |
+
 ```bash
-npm run record      # needs ffmpeg on PATH (brew install ffmpeg)
+npm run video       # chapters + narration + captions; needs ffmpeg and macOS `say`
+```
+
+`npm run video` records one browser session per chapter, synthesises that chapter's
+narration, pads whichever side is shorter so picture and voice share a length, burns a
+caption into a lower-third band, then concatenates. Because the transcript is generated
+from the measured segment durations, it lines up with the mp4 rather than being written
+from memory.
+
+Delivery targets the YouTube spec: H.264 High, yuv420p, 1:1 pixels, 16:9, 30 fps, AAC 48 kHz.
+The app is recorded at 1920×984 so it renders at its native size and the caption band
+completes the frame — no scaling, no pillarboxing.
+
+### The quicker 30-second cut
+
+```bash
+npm run record      # two windows, no voice
 ```
 
 It drives two real browser windows — Riya bidding, Arjun counter-bidding — with real clicks,

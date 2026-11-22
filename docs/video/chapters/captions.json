@@ -1,0 +1,57 @@
+[
+  {
+    "id": "01-intro",
+    "text": "BidLive — the auction is the chat",
+    "out": "docs/video/chapters/01-intro-cap.png"
+  },
+  {
+    "id": "02-one-input",
+    "text": "One input does both jobs",
+    "out": "docs/video/chapters/02-one-input-cap.png"
+  },
+  {
+    "id": "03-tap",
+    "text": "One tap puts you in front",
+    "out": "docs/video/chapters/03-tap-cap.png"
+  },
+  {
+    "id": "04-rules",
+    "text": "The server holds the rules",
+    "out": "docs/video/chapters/04-rules-cap.png"
+  },
+  {
+    "id": "05-outbid",
+    "text": "Outbid in place, with a push",
+    "out": "docs/video/chapters/05-outbid-cap.png"
+  },
+  {
+    "id": "06-recall",
+    "text": "Withdrawing a bid recomputes the lead",
+    "out": "docs/video/chapters/06-recall-cap.png"
+  },
+  {
+    "id": "07-clock",
+    "text": "The clock is on the server",
+    "out": "docs/video/chapters/07-clock-cap.png"
+  },
+  {
+    "id": "08-snipe",
+    "text": "A late bid moves the clock, not the outcome",
+    "out": "docs/video/chapters/08-snipe-cap.png"
+  },
+  {
+    "id": "09-settle",
+    "text": "Settlement is a message too",
+    "out": "docs/video/chapters/09-settle-cap.png"
+  },
+  {
+    "id": "10-rail",
+    "text": "Every auction you are in, one rail",
+    "out": "docs/video/chapters/10-rail-cap.png"
+  },
+  {
+    "id": "11-ledger",
+    "text": "The transcript is the ledger",
+    "out": "docs/video/chapters/11-ledger-cap.png"
+  }
+]
