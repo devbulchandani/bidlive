@@ -17,6 +17,7 @@ import { chromium } from "playwright-core";
 import os from "node:os";
 import path from "node:path";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -25,7 +26,70 @@ const BASE = "http://localhost:3000";
 const OUT = "docs/video";
 const TMP = `${OUT}/chapters`;
 const FFMPEG = process.env.FFMPEG || "ffmpeg";
-const VOICE = process.env.VOICE || "Rishi";
+const VOICE = process.env.VOICE || "Rishi"; // fallback narrator, used when no Gnani key
+
+/* Gnani Vachana TTS — the narrator. Falls back to macOS `say` without a key. */
+const GNANI = {
+  url: "https://api.vachana.ai/api/v1/tts/inference",
+  voice: process.env.GNANI_VOICE || "Arko",
+  model: process.env.GNANI_MODEL || "timbre-v3.0",
+  language: process.env.GNANI_LANGUAGE || "en-IN",
+  speed: Number(process.env.GNANI_SPEED || 1.0),
+  ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+};
+
+function gnaniKey() {
+  if (process.env.GNANI_API_KEY) return process.env.GNANI_API_KEY.trim();
+  try {
+    const line = readFileSync(".env.local", "utf8")
+      .split("\n")
+      .find((l) => l.startsWith("GNANI_API_KEY="));
+    return line ? line.split("=").slice(1).join("=").trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Synthesises one chapter's narration to a 48 kHz wav. */
+async function narrate(text, out) {
+  const key = gnaniKey();
+  if (!key) {
+    const aiff = out.replace(/\.wav$/, ".aiff");
+    await run("say", ["-v", VOICE, "-o", aiff, text]);
+    await run(FFMPEG, ["-y", "-v", "error", "-i", aiff, "-ar", "48000", "-ac", "2", out]);
+    return "say";
+  }
+
+  const res = await fetch(GNANI.url, {
+    method: "POST",
+    headers: {
+      "X-API-Key-ID": key,
+      "Content-Type": "application/json",
+      "User-Agent": GNANI.ua,
+      Origin: "https://app.gnani.ai",
+      Referer: "https://app.gnani.ai/",
+    },
+    body: JSON.stringify({
+      text,
+      voice: GNANI.voice,
+      model: GNANI.model,
+      language: GNANI.language,
+      speed: GNANI.speed,
+      audio_config: {
+        sample_rate: 48000,
+        num_channels: 2,
+        sample_width: 2,
+        encoding: "linear_pcm",
+        container: "wav",
+      },
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`gnani ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  }
+  await writeFile(out, Buffer.from(await res.arrayBuffer()));
+  return "gnani";
+}
 const W = 1920;
 const H = 1080;
 const CONTENT_H = 984; // the app fills this; the caption band owns the rest
@@ -288,10 +352,8 @@ const segments = [];
 for (const [index, chapter] of CHAPTERS.entries()) {
   process.stdout.write(`  ${chapter.id} … `);
 
-  const aiff = `${TMP}/${chapter.id}.aiff`;
   const wav = `${TMP}/${chapter.id}.wav`;
-  await run("say", ["-v", VOICE, "-o", aiff, chapter.narration]);
-  await run(FFMPEG, ["-y", "-v", "error", "-i", aiff, "-ar", "48000", "-ac", "2", wav]);
+  const engine = await narrate(chapter.narration, wav);
   const voiceDur = await probe(wav);
 
   const dir = `${TMP}/${chapter.id}`;
@@ -336,7 +398,9 @@ for (const [index, chapter] of CHAPTERS.entries()) {
 
   const dur = await probe(seg);
   segments.push({ chapter, seg, dur });
-  console.log(`${dur.toFixed(1)}s (voice ${voiceDur.toFixed(1)}s, picture ${clipDur.toFixed(1)}s)`);
+  console.log(
+    `${dur.toFixed(1)}s (voice ${voiceDur.toFixed(1)}s via ${engine}, picture ${clipDur.toFixed(1)}s)`,
+  );
 }
 
 await browser.close();
@@ -345,7 +409,18 @@ const list = `${TMP}/list.txt`;
 await writeFile(list, segments.map((s) => `file '${path.resolve(s.seg)}'`).join("\n"), "utf8");
 
 const final = `${OUT}/bidlive-full.mp4`;
-await run(FFMPEG, ["-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", final]);
+await run(FFMPEG, ["-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", `${TMP}/joined.mp4`]);
+
+// speech lands quiet from the TTS API; normalise to -16 LUFS and upmix to stereo
+await run(FFMPEG, [
+  "-y", "-v", "error",
+  "-i", `${TMP}/joined.mp4`,
+  "-c:v", "copy",
+  "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+  "-ac", "2", "-ar", "48000",
+  "-c:a", "aac", "-b:a", "160k",
+  final,
+]);
 
 /* transcript, measured from the rendered segments so it matches the file */
 let clock = 0;
@@ -364,7 +439,7 @@ const rows = segments.map((s) => {
 const md = [
   "# BidLive — demo video transcript",
   "",
-  `Video: \`docs/video/bidlive-full.mp4\` · ${fmt(clock)} · ${W}×${H} · narrated (${VOICE}, macOS say)`,
+  `Video: \`docs/video/bidlive-full.mp4\` · ${fmt(clock)} · ${W}×${H} · narrated (${GNANI.voice}, Gnani ${GNANI.model})`,
   "",
   "Timings are measured from the rendered segments, so they line up with the mp4.",
   "",

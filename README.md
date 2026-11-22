@@ -234,7 +234,7 @@ Two builds are produced:
 
 | File | What it is |
 |---|---|
-| `docs/video/bidlive-full.mp4` | **The submission cut** — 2:07, 1920×1080, narrated, one chapter per feature, captioned |
+| `docs/video/bidlive-full.mp4` | **The submission cut** — 1:58, 1920×1080, narrated by Gnani (voice: Arko), one chapter per feature, captioned |
 | `docs/video/transcript.md` | Chapter-by-chapter narration with timings measured from the render |
 | `docs/video/voiceover.txt` | Narration only, for re-recording in Clipchamp |
 
@@ -242,8 +242,10 @@ Two builds are produced:
 npm run video       # chapters + narration + captions; needs ffmpeg and macOS `say`
 ```
 
-`npm run video` records one browser session per chapter, synthesises that chapter's
-narration, pads whichever side is shorter so picture and voice share a length, burns a
+Narration is Gnani Vachana TTS (Timbre v3.0, voice *Arko*), with a macOS `say`
+fallback when `GNANI_API_KEY` is unset. `npm run video` records one browser session
+per chapter, synthesises that chapter's narration, normalises the mix to −16 LUFS,
+pads whichever side is shorter so picture and voice share a length, burns a
 caption into a lower-third band, then concatenates. Because the transcript is generated
 from the measured segment durations, it lines up with the mp4 rather than being written
 from memory.

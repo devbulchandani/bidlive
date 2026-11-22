@@ -1,22 +1,22 @@
 # BidLive — demo video transcript
 
-Video: `docs/video/bidlive-full.mp4` · 2:07 · 1920×1080 · narrated (Rishi, macOS say)
+Video: `docs/video/bidlive-full.mp4` · 1:58 · 1920×1080 · narrated (Arko, Gnani timbre-v3.0)
 
 Timings are measured from the rendered segments, so they line up with the mp4.
 
 | In | Out | On screen | Narration |
 |---|---|---|---|
-| 0:00 | 0:11 | BidLive — the auction is the chat | BidLive is a live auction that runs inside a chat room. There is no bidding form and no second tab. The room where people ask about a lot is the room where its price moves. |
-| 0:11 | 0:23 | One input does both jobs | Inside the lot, one box does both jobs. Type a question and it is a message. Type a number, or tap a chip, and it is a bid. The composer never changes, and neither do you. |
-| 0:23 | 0:33 | One tap puts you in front | Fifty rupees is the whole increment, so one tap is usually enough. The bid lands as a message, and everyone in the room sees the same card. |
-| 0:33 | 0:44 | The server holds the rules | The server decides what counts. A bid below the minimum is refused outright. A seller cannot bid on their own lot, and a bidder the auctioneer has muted is refused too. |
-| 0:44 | 0:57 | Outbid in place, with a push | Arjun is in his own window. When he bids five hundred and fifty, her card turns to outbid in place, and she gets a push. The person who was leading is the only one who gets told. |
-| 0:57 | 1:08 | Withdrawing a bid recomputes the lead | A bid can be withdrawn while it is not winning. The lead is recomputed by replaying the transcript rather than decrementing a counter, so the card and the record can never disagree. |
-| 1:08 | 1:18 | The clock is on the server | Now the auctioneer closes the lot with under half a minute left, and the countdown turns red. Watch the last few seconds. |
-| 1:18 | 1:31 | A late bid moves the clock, not the outcome | The bid lands at eight seconds, and the clock extends by thirty. Nobody wins by waiting for the buzzer. And the extension is not silent, it is a message the whole room can read. |
-| 1:31 | 1:42 | Settlement is a message too | When the clock runs out the lot settles. Winner, final price, bid count. Everyone who bid and lost gets a direct message, instead of being left to guess. |
-| 1:42 | 1:53 | Every auction you are in, one rail | You are rarely watching one lot. The rail lists every auction you are in, each row carrying its own live countdown, so switching lots never means switching tabs. |
-| 1:53 | 2:07 | The transcript is the ledger | Every bid, message and settlement is stored in a Nexconn group channel. Ordered, offline safe, and kept for a hundred and eighty days. So the transcript is the ledger, and a restart can rebuild the auction from it. |
+| 0:00 | 0:10 | BidLive — the auction is the chat | BidLive is a live auction that runs inside a chat room. There is no bidding form and no second tab. The room where people ask about a lot is the room where its price moves. |
+| 0:10 | 0:22 | One input does both jobs | Inside the lot, one box does both jobs. Type a question and it is a message. Type a number, or tap a chip, and it is a bid. The composer never changes, and neither do you. |
+| 0:22 | 0:31 | One tap puts you in front | Fifty rupees is the whole increment, so one tap is usually enough. The bid lands as a message, and everyone in the room sees the same card. |
+| 0:31 | 0:42 | The server holds the rules | The server decides what counts. A bid below the minimum is refused outright. A seller cannot bid on their own lot, and a bidder the auctioneer has muted is refused too. |
+| 0:42 | 0:51 | Outbid in place, with a push | Arjun is in his own window. When he bids five hundred and fifty, her card turns to outbid in place, and she gets a push. The person who was leading is the only one who gets told. |
+| 0:51 | 1:02 | Withdrawing a bid recomputes the lead | A bid can be withdrawn while it is not winning. The lead is recomputed by replaying the transcript rather than decrementing a counter, so the card and the record can never disagree. |
+| 1:02 | 1:12 | The clock is on the server | Now the auctioneer closes the lot with under half a minute left, and the countdown turns red. Watch the last few seconds. |
+| 1:12 | 1:24 | A late bid moves the clock, not the outcome | The bid lands at eight seconds, and the clock extends by thirty. Nobody wins by waiting for the buzzer. And the extension is not silent, it is a message the whole room can read. |
+| 1:24 | 1:34 | Settlement is a message too | When the clock runs out the lot settles. Winner, final price, bid count. Everyone who bid and lost gets a direct message, instead of being left to guess. |
+| 1:34 | 1:45 | Every auction you are in, one rail | You are rarely watching one lot. The rail lists every auction you are in, each row carrying its own live countdown, so switching lots never means switching tabs. |
+| 1:45 | 1:58 | The transcript is the ledger | Every bid, message and settlement is stored in a Nexconn group channel. Ordered, offline safe, and kept for a hundred and eighty days. So the transcript is the ledger, and a restart can rebuild the auction from it. |
 
 ## Voiceover only (for re-recording in Clipchamp)
 
@@ -24,42 +24,42 @@ Timings are measured from the rendered segments, so they line up with the mp4.
 
 BidLive is a live auction that runs inside a chat room. There is no bidding form and no second tab. The room where people ask about a lot is the room where its price moves.
 
-**[0:11] One input does both jobs**
+**[0:10] One input does both jobs**
 
 Inside the lot, one box does both jobs. Type a question and it is a message. Type a number, or tap a chip, and it is a bid. The composer never changes, and neither do you.
 
-**[0:23] One tap puts you in front**
+**[0:22] One tap puts you in front**
 
 Fifty rupees is the whole increment, so one tap is usually enough. The bid lands as a message, and everyone in the room sees the same card.
 
-**[0:33] The server holds the rules**
+**[0:31] The server holds the rules**
 
 The server decides what counts. A bid below the minimum is refused outright. A seller cannot bid on their own lot, and a bidder the auctioneer has muted is refused too.
 
-**[0:44] Outbid in place, with a push**
+**[0:42] Outbid in place, with a push**
 
 Arjun is in his own window. When he bids five hundred and fifty, her card turns to outbid in place, and she gets a push. The person who was leading is the only one who gets told.
 
-**[0:57] Withdrawing a bid recomputes the lead**
+**[0:51] Withdrawing a bid recomputes the lead**
 
 A bid can be withdrawn while it is not winning. The lead is recomputed by replaying the transcript rather than decrementing a counter, so the card and the record can never disagree.
 
-**[1:08] The clock is on the server**
+**[1:02] The clock is on the server**
 
 Now the auctioneer closes the lot with under half a minute left, and the countdown turns red. Watch the last few seconds.
 
-**[1:18] A late bid moves the clock, not the outcome**
+**[1:12] A late bid moves the clock, not the outcome**
 
 The bid lands at eight seconds, and the clock extends by thirty. Nobody wins by waiting for the buzzer. And the extension is not silent, it is a message the whole room can read.
 
-**[1:31] Settlement is a message too**
+**[1:24] Settlement is a message too**
 
 When the clock runs out the lot settles. Winner, final price, bid count. Everyone who bid and lost gets a direct message, instead of being left to guess.
 
-**[1:42] Every auction you are in, one rail**
+**[1:34] Every auction you are in, one rail**
 
 You are rarely watching one lot. The rail lists every auction you are in, each row carrying its own live countdown, so switching lots never means switching tabs.
 
-**[1:53] The transcript is the ledger**
+**[1:45] The transcript is the ledger**
 
 Every bid, message and settlement is stored in a Nexconn group channel. Ordered, offline safe, and kept for a hundred and eighty days. So the transcript is the ledger, and a restart can rebuild the auction from it.
