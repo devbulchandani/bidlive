@@ -17,3 +17,6 @@ next-env.d.ts
 
 # aws cli session (do not commit)
 .aws
+
+# local-only: write-up, video, hosting notes and screenshots
+/docs/

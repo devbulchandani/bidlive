@@ -1,115 +1,89 @@
 # BidLive
 
-**A live auction that runs inside a chat room.** Bids are messages. The clock is enforced on the
-server. Every raise stays in the room's history forever, so a dispute has a transcript instead of a
-he-said-she-said.
+**A live auction that runs inside a chat room.** Bids are messages in a Nexconn group channel, the
+clock and the minimum are enforced on the server, and the transcript is the record — which is also
+what the auction is rebuilt from after a restart.
 
-Built for the **Nexconn Build Challenge 2026**.
+**Live:** https://34-227-57-42.sslip.io · **Built for:** Nexconn Build Challenge 2026
+
+![Two windows at the same instant: Riya is outbid, Arjun is leading](assets/hero.png)
 
 ---
-
-![Two windows at the same instant: Riya is outbid, Arjun is leading](docs/screenshots/00-hero.png)
 
 ## Run it
 
 ```bash
 npm install
-cp .env.example .env.local   # optional — it works without credentials
+cp .env.example .env.local   # optional — the app runs without credentials
 npm run dev                  # http://localhost:3000
 ```
 
-It runs end-to-end with **no credentials at all**: the auction uses a local event bus and the UI
-honestly reports `Nexconn: local bus`. Add credentials and the same room is backed by Nexconn.
+Without credentials the auction runs on a local event bus and the UI says
+`Nexconn · local bus`. Add a key and secret and the same room is backed by Nexconn.
 
-### The two screens
+### The three screens
 
 | Route | What it is |
 |---|---|
-| `/` | The landing page — what this is, and a live lot you can bid on without signing up |
-| `/app` | The app: every lot, your rooms first, the first lot featured |
-| `/app/[lot]` | A room — the auction, with a **persistent rail** listing every auction you are in |
+| `/` | Landing page — what this is, plus a live lot you can bid on without signing up |
+| `/app` | Every lot, your rooms first, the first lot featured |
+| `/app/[lot]` | A room, inside a shell with a **persistent rail** of every auction you are in |
 
-The rail is the reason there are not five browser tabs: it stays put while the lot in the middle
-changes, and each row carries its own live countdown.
+The rail is why there are not five browser tabs: it stays put while the lot in the middle changes,
+and each row carries its own live countdown.
 
 ### Try the demo in 60 seconds
 
 1. Open <http://localhost:3000/app/yashica?as=Riya> — you're Riya, bidding.
-2. Open <http://localhost:3000/app/yashica?as=Arjun> in a second window — you're Arjun.
+2. Open <http://localhost:3000/app/yashica?as=Arjun> in a second window.
 3. Bid in one window; watch the other flip to `LEADING` / `OUTBID`.
 4. Enter a second lot and switch between them in the rail — both countdowns keep running.
-5. Open <http://localhost:3000/app/yashica?as=Meera> — Meera is the seller, so you get the
-   auctioneer controls: **+60s**, **Close in 30s**, and a mute list.
+5. Open `?as=Meera` — Meera owns the lot, so you get the auctioneer controls: **+60s**,
+   **Close in 30s**, and a mute list.
 
-`?as=Name` is a demo shortcut; it just sets the same identity the gate would. Old `/lot/x` links
-redirect into the app, so the rehearsal scripts and any shared links still work.
+`?as=Name` is a demo shortcut; it sets the same identity the gate would. Old `/lot/x` links redirect
+into the app.
 
-### Design
-
-A neutral product surface rather than a themed dashboard: light grey ground, white cards, a heavy
-geometric sans (Plus Jakarta Sans) for display and Geist Mono for anything that ticks. One accent —
-an auction orange — is reserved for live state and the primary bid action, so colour means something.
-
-Two details worth calling out:
-
-- **Real photography.** Every lot carries an actual photograph (Wikimedia Commons; see
-  `public/images/lots/CREDITS.json`). Product shots are `object-fit: contain` on white so nothing is
-  ever cropped mid-object, which is the usual failure of card grids built on stock images.
-- **Hand-drawn icons.** `components/ui/LotIcon.tsx` is a small icon family on a 24px grid at one
-  stroke weight — camera, sneaker, vinyl, watch, tag. The rail tints each lot's tile by category
-  instead of showing an emoji, so the sidebar reads as a designed list rather than a chat log.
-
-Fonts are self-hosted in `public/fonts` (no build-time network call, no Google Fonts dependency).
+---
 
 ## Why chat, not a bid button
 
-Auctions are social: the condition question, the provenance photo, the "going once…" call. A
-separate bidding form splits the audience from the conversation and turns a live event into a form.
-Here the composer is dual-purpose — type text and you're chatting, type a number at or above the
-minimum and the send button becomes the bid.
+Auctions are social before they are transactional: the condition question, the provenance photo, the
+"going once" call. Split the conversation from the bidding and you lose three things — the audience
+(watching and bidding become separate decisions), the record (a chat log and a bid table, neither
+authoritative), and trust (a client-side clock can be lied to).
 
-The second reason is durability. An auction is a dispute machine. Every bid is a message in a Nexconn
-group channel: ordered, offline-safe, retained, searchable months later. **The transcript is the
-ledger.**
+Here the composer does both jobs. Type text and you're chatting; type a number at or above the
+minimum and the send button becomes the bid. Chips beside it give the next increment in one tap.
 
 ---
 
 ## Architecture
 
 ```
-browser ──────────────► Next.js route handlers ──────────────► Nexconn Server API
-   │  (SSE: fast path)          │  (single writer)              (GroupChannel per lot)
-   │                            │
-   │                            ├─ lib/auction.ts   pure rules: min increment, anti-snipe,
-   │                            │                   settlement, recall recomputation
-   │                            ├─ lib/store.ts     lots + append-only event log + subscribers
-   │                            └─ lib/service.ts   placeBid / recall / chat / moderate / settle
-   │
-   └── Chat SDK (@nexconn/chat) ── connect, join channel, receive ──► same channel
+browser ──SSE──────────► route handlers ──────────────► Nexconn Server API
+   │                     (single writer)                 (group channel per lot)
+   │                        ├─ pure rules (auction.ts)
+   │                        ├─ append-only event log (store.ts)
+   │                        └─ placeBid / recall / moderate / settle (service.ts)
+   └──Chat SDK────────────► connect · join · receive ───► same channel
 ```
 
-**The server is the only writer.** That single decision removes the whole class of bugs where two
-clients disagree about who is winning:
+**The server is the only writer**, which removes the whole class of bugs where two clients disagree
+about who is winning:
 
-- **Ordering** — every accepted bid gets a monotonic `seq` from the event log. Clients render by
-  `seq`, never by arrival time. Two bids in the same millisecond resolve deterministically.
-- **The clock** — `endsAt` lives on the server. Clients receive `serverTime` with every push and
-  correct their own offset, so a device with the wrong time still sees the truth.
-- **Anti-snipe** — a bid inside the final 30s extends the lot by 30s, capped at five extensions. The
-  extension is *broadcast as a message*, not a silent number change.
-- **Settlement** — lazy close: any read after `endsAt` settles the lot, so it works on a platform
-  with no long-running timers.
-- **Recomputation** — a lot's leader is derivable from its event log alone (`recomputeTop`). Recall a
-  bid and the leader recalculates from the transcript, not from a mutable counter.
+- **Ordering** — every accepted bid gets a monotonic `seq`. Clients render by sequence, never arrival
+  time, so two bids in the same millisecond resolve deterministically.
+- **The clock** — `endsAt` lives on the server; `serverTime` rides with every push so a device with
+  the wrong time still sees the truth.
+- **Anti-snipe** — a bid inside the final 30s extends the lot by 30s, capped at five, and the
+  extension is broadcast as a message rather than applied silently.
+- **Recomputation** — the leader is derived by replaying the log (`recomputeTop`), so a recall
+  recalculates from the transcript and can never drift from a counter.
+- **Lazy settlement** — any read after `endsAt` settles the lot, so it works with no long-running timer.
 
-### The rules, in one place
-
-`lib/auction.ts` is pure functions with no I/O. The same `validateBid` is used by:
-
-1. `POST /api/lots/[id]/action` — the live path.
-2. `POST /api/nexconn/callback` — the pre-delivery callback path (see below).
-
-Two entry points, one rule set, so they cannot drift.
+`lib/auction.ts` is pure functions, and the same `validateBid` backs both the live API and the
+pre-delivery callback, so the two paths cannot diverge.
 
 ---
 
@@ -117,206 +91,161 @@ Two entry points, one rule set, so they cannot drift.
 
 On purpose. Two layers, both Nexconn:
 
-| Layer | What it holds | Lifetime |
+| Layer | Holds | Lifetime |
 |---|---|---|
-| **Process memory** (`lib/store.ts`) | the live projection: lots, current top bid, sequence, watchers, mute list | until restart — it is a cache, not the record |
+| **Process memory** (`lib/store.ts`) | the live projection: lots, top bid, sequence, watchers, mute list | until restart — a cache, not the record |
 | **Nexconn channel per lot** | every bid, chat and settlement as a custom message | 180 days |
 
-On a cold start the projection is empty, so the room **replays itself out of the
-transcript**. The browser is the component holding an authenticated chat session, so it
-reads the channel history through the SDK and posts it to `/api/lots/[id]/rehydrate`;
-the server replays those messages through the same rules that accepted them:
+On a cold start the projection is empty, so the room **replays itself out of the transcript**. The
+browser holds the only authenticated chat session, so it reads channel history through the SDK and
+posts it to `/api/lots/[id]/rehydrate`; the server replays those messages through the same rules that
+accepted them:
 
 - bids are re-checked (right lot, right sender, integer amount, seller excluded);
-- sequence numbers are **re-issued** in chronological order, because the original
-  numbers were per-process and restart with the server;
-- a channel accumulates every demo run, so replay finds the start of the current
-  round — the last settlement, or the first bid that breaks the rule that every
-  accepted bid must be higher than the one before it;
-- anything that could not have been produced by the live rules is dropped.
+- sequence numbers are **re-issued** chronologically, because the originals were per-process;
+- a channel accumulates every demo run, so replay finds the start of the current round — the last
+  settlement, or the first bid that breaks the rule that every accepted bid must be higher;
+- anything the engine would have refused is dropped.
 
-That last point is the trust boundary: a client may hand the server a transcript, but it
-cannot hand it a fiction the auction engine would have refused. The client still never
-publishes a bid directly.
+That is the trust boundary: a client may hand the server a transcript, but not a fiction the auction
+engine would reject. Clients still never publish a bid directly.
 
-`/api/dev/reset` deliberately disables replay for the rest of the session — otherwise a
-reset would immediately re-import the bids it just cleared.
+`/api/dev/reset` disables replay for the rest of the session — otherwise a reset would immediately
+re-import the bids it just cleared.
+
+---
 
 ## Nexconn integration
 
-| Capability | How it's used | Where |
-|---|---|---|
-| **Group channel per lot** | The room's durable message log | `lib/nexconn/server.ts` |
-| **Custom messages** (`bidlive:Bid`, `bidlive:System`, `bidlive:Chat`) | Bid cards, extensions, settlements as structured messages | `lib/service.ts` |
-| **Server API + App Secret** | Token issuance and message publication, server-side only | `app/api/token/route.ts` |
-| **Chat SDK (web)** | Client connects, joins the channel, tracks connection state, receives over the socket | `lib/client/nexconn.ts` |
-| **Push** | Outbid and settlement notices; the room also raises a browser notification | `lib/service.ts` → `notifyUser` |
-| **Moderation** | Mute list that visibly refuses a muted bidder's bids | `moderate()` |
-| **Pre-message callback** | Optional pre-delivery validation — a rejected bid never reaches the room | `app/api/nexconn/callback/route.ts` |
-| **Presence / read state / 180-day history** | Inherited by using a real channel instead of a bespoke socket | — |
+| Capability | Where it's used |
+|---|---|
+| **Group channel per lot** | the room's durable log: ordering, offline sync, history |
+| **Custom messages** | `bidlive:Bid`, `bidlive:Chat`, `bidlive:System` — bids, extensions, recalls, settlements |
+| **Message history** (`BaseChannel.createMessagesQuery`) | cold-start replay; the reason there is no database |
+| **Live delivery** (`addMessageHandler`) | bids arriving in the room as they happen |
+| **Connection state** (`addConnectionStatusHandler`) | the live / reconnecting indicator |
+| **Server API — user tokens** | `/user/getToken.json`; the App Secret stays on the server |
+| **Server API — channels** | `/group/create.json`, `/group/join.json` |
+| **Server API — publish** | `/message/group/publish.json` fans every event into the channel |
+| **Server API — private push** | `/message/private/publish.json` for "you've been outbid" |
 
 ### Enabling the real thing
 
 ```bash
-NEXCONN_APP_KEY=...               # console.nexconn.ai → App Key page
+NEXCONN_APP_KEY=...               # console.nexconn.ai → App Key
 NEXCONN_APP_SECRET=...            # same environment as the key
-NEXT_PUBLIC_NEXCONN_APP_KEY=...   # same App Key; safe to expose
-NEXCONN_API_BASE=https://api.sg-light-api.com   # Singapore data centre
-NEXCONN_AREA_CODE=2
+NEXT_PUBLIC_NEXCONN_APP_KEY=...   # optional; the client falls back to /api/health
+NEXCONN_API_BASE=https://api.us-light-api.com
+NEXCONN_AREA_CODE=3
 ```
 
-Run **`npm run check:nexconn`** first. It authenticates against every regional
-host and prints the exact `NEXCONN_API_BASE` / `NEXCONN_AREA_CODE` your app needs —
-the wrong data centre looks identical to a broken SDK, and that confusion costs
-hours. Then restart the dev server: `NEXT_PUBLIC_*` is inlined at build time.
+Run **`npm run check:nexconn`** first: it authenticates against every regional host and prints the
+`NEXCONN_API_BASE` / `NEXCONN_AREA_CODE` your app needs. The wrong data centre looks identical to a
+broken SDK, and that confusion costs hours — this app is on **North America** (`areaCode 3`), not the
+Singapore default.
 
-Then the top bar reads `Nexconn live`, and the room shows `SDK · n` — `n` counts messages actually
-received over the Nexconn socket, so the pill is evidence rather than decoration.
-
-For **pre-delivery** validation (the strongest version: an invalid bid never exists for anyone),
-point a message callback at `/api/nexconn/callback` in the console and set
-`NEXCONN_CALLBACK_ENFORCE=1`. The endpoint blocks with `code: 4` and the rejection reason.
-
-**Which data centre?** Nexconn runs one per region, and an app only exists in its
-own. This app authenticated on **North America** (`api.us-light-api.com`,
-areaCode 3) — if we had assumed the Singapore default, every call would have
-returned `403 App-Key is not exist` and looked like a broken SDK. `npm run
-check:nexconn` is what turned that into a one-line fix.
-
-The App Secret is never sent to the browser. `app/api/token/route.ts` is the only place that touches
-it, and it only ever returns a user token.
+The client resolves its App Key from `/api/health` at runtime, so a deploy never depends on
+`NEXT_PUBLIC_*` being present at build time. (That was a real bug: builds without it shipped a client
+that connected to nothing.)
 
 ---
-
-## Verified against live credentials
-
-Run with a real Production App Key on the North America data centre:
-
-| Check | Result |
-|---|---|
-| `npm run check:nexconn` — region + signature | ✅ authenticated on `api.us-light-api.com` |
-| `GET /api/token` — Server API user registration | ✅ real token issued |
-| Group channel create + join (owned by the auctioneer bot) | ✅ |
-| `bidlive:Bid` publish per bid | ✅ |
-| `bidlive:Chat` publish per message | ✅ |
-| `bidlive:System` publish on settlement | ✅ |
-| `/message/private/publish.json` outbid notice | ✅ |
-| **Chat SDK connects in the browser** (init + area code + token + join) | ✅ pill reads `SDK · n` |
-| **Live receive** — counter rises when a message arrives | ✅ `SDK · 1` → `SDK · 2` (`node scripts/verify-sdk.mjs`) |
 
 ## What works today
 
 - [x] Landing page with a live lot, real countdown and working bid links
 - [x] Persistent rail: switch between every auction you are in, each with its own timer
-- [x] Overview: featured lot, "in room" markers, per-lot countdowns
-- [x] Lot room with bid cards, `LEADING` / `OUTBID` / `WON` states rendered in place
-- [x] Server-authoritative bidding: minimum increment, banded increments, rate limit
-- [x] Anti-snipe extension, capped, announced as a message
+- [x] Bid cards with `LEADING` / `OUTBID` / `WON` states rendered in place
+- [x] Server-authoritative bidding: banded increments, rate limiting, seller exclusion
+- [x] Anti-snipe extension, capped, announced in the room
 - [x] Recall a bid → lead recomputed from the event log
 - [x] Settlement with winner, final price, bid count; unsold when the reserve isn't met
 - [x] Auctioneer controls: extend, close in 30s, mute/unmute a bidder
-- [x] Outbid + settlement notices, in-app and as browser notifications
-- [x] SSE fast path with reconnect, gap detection and resync
-- [x] Mobile layout that leads with price, clock and bid box
+- [x] Outbid and settlement notices, in-app and as browser notifications
+- [x] SSE with reconnect, gap detection and resync
 - [x] Cold start replays the auction out of the Nexconn transcript (no database)
 - [x] Degrades to a local bus with an honest badge when credentials are absent
 
 ## Deliberately out of scope
 
 Payments, authentication beyond a display name, multi-tenant auction houses, and image uploads. Each
-would have cost a day and none of them makes the auction mechanic more convincing.
+would have cost a day and none makes the auction mechanic more convincing.
+
+---
+
+## Design
+
+A neutral product surface rather than a themed dashboard: light grey ground, white cards, a heavy
+geometric sans (Plus Jakarta Sans) for display, Geist Mono for anything that ticks. One accent —
+auction orange — carries live state and the primary bid action, so colour means something.
+
+- **Real photography.** Every lot has an actual photograph (Wikimedia Commons; see
+  `public/images/lots/CREDITS.json`). Product shots use `object-fit: contain` on white so nothing is
+  cropped mid-object.
+- **Hand-drawn icons.** `components/ui/LotIcon.tsx` is a small family on a 24px grid at one stroke
+  weight; the rail tints each lot's tile by category instead of showing an emoji.
+
+Fonts are self-hosted in `public/fonts` — no build-time network call, no Google Fonts dependency.
+
+---
+
+## Deployment
+
+One long-lived Node process, one instance. Auction state is a process-local projection, so a
+load-balanced pair would split the room.
+
+- **AWS (what's live):** `./deploy/aws-deploy.sh` provisions EC2 from `.env.local`, installs Node 22,
+  builds, and points Caddy at the instance's dotted IP in dashed form so `sslip.io` plus Let's Encrypt
+  produce a real certificate. No SSH needed; an SSM instance profile is attached for diagnosis, and
+  the boot log lands in `/var/log/bidlive-boot.log`. `./deploy/aws-teardown.sh` removes everything.
+- **Render / Railway / Fly:** `render.yaml` is a Blueprint, and there is a `Dockerfile`.
+- **Not** GitHub Pages (static only — no route handlers, no server secret) or Cloudflare Workers
+  without a Durable Object rewrite (per-isolate state splits the room).
+
+`npm start` honours `$PORT`.
 
 ---
 
 ## Recording the demo
 
-Two builds are produced:
+Two outputs, both written to `docs/` (local only, gitignored):
 
 | File | What it is |
 |---|---|
-| `docs/video/bidlive-full.mp4` | **The submission cut** — 1:58, 1920×1080, narrated by Gnani (voice: Arko), one chapter per feature, captioned |
-| `docs/video/transcript.md` | Chapter-by-chapter narration with timings measured from the render |
-| `docs/video/voiceover.txt` | Narration only, for re-recording in Clipchamp |
+| `docs/video/bidlive-full.mp4` | the submission cut — ~2 min, 1920×1080, narrated, one chapter per feature |
+| `docs/video/bidlive-demo.mp4` | a 35-second silent two-window cut |
+| `docs/writeup.pdf` | the submission write-up |
 
 ```bash
-npm run video       # chapters + narration + captions; needs ffmpeg and macOS `say`
+npm run video       # chapters + narration + captions; needs ffmpeg and a Gnani key
+npm run record      # the short silent two-window cut
+node scripts/writeup.mjs
 ```
 
-Narration is Gnani Vachana TTS (Timbre v3.0, voice *Arko*), with a macOS `say`
-fallback when `GNANI_API_KEY` is unset. `npm run video` records one browser session
-per chapter, synthesises that chapter's narration, normalises the mix to −16 LUFS,
-pads whichever side is shorter so picture and voice share a length, burns a
-caption into a lower-third band, then concatenates. Because the transcript is generated
-from the measured segment durations, it lines up with the mp4 rather than being written
-from memory.
+Narration is Gnani Vachana TTS (Timbre v3.0, voice *Arko*), falling back to macOS `say` when
+`GNANI_API_KEY` is unset. Each chapter is recorded separately, the narration is synthesised first so
+picture and voice share a length, and the transcript is generated from the measured durations so it
+matches the video.
 
-Delivery targets the YouTube spec: H.264 High, yuv420p, 1:1 pixels, 16:9, 30 fps, AAC 48 kHz.
-The app is recorded at 1920×984 so it renders at its native size and the caption band
-completes the frame — no scaling, no pillarboxing.
-
-### The quicker 30-second cut
-
-```bash
-npm run record      # two windows, no voice
-```
-
-It drives two real browser windows — Riya bidding, Arjun counter-bidding — with real clicks,
-records both, and composites them side by side with a title and end card:
-
-```
-docs/video/bidlive-demo.mp4   2560×720 · ~35s · silent
-```
-
-The beat list is deliberately sparse: a question, three taps, then the auctioneer closes the
-lot with 14 seconds left so the countdown visibly runs down in red, a bid lands, and the clock
-jumps to ~0:36 with the extension message. That one moment is the whole anti-snipe argument,
-so it gets the most screen time.
-
-The capture is silent. Two ways to finish it:
-
-- **Narrate over it** — drop the mp4 into iMovie/CapCut, record a voiceover against the shot
-  list in [`docs/SUBMISSION.md`](docs/SUBMISSION.md), export 1080p.
-- **Record it yourself** — `Cmd+Shift+5` on macOS (or Screen Studio for the polished cursor
-  smoothing), two windows side by side, following the same beats. Best if you want your own
-  cursor and voice in one take.
-
-Either way: `POST /api/dev/reset` first (or the footer button in `/app`) so the clocks are
-fresh, and note that the dev-mode badge is disabled in `next.config.ts` so it stays out of frame.
-
-## Deployment
-
-[`docs/HOSTING.md`](docs/HOSTING.md) has the detail, including why GitHub Pages and
-Cloudflare Workers do not fit. [`docs/HOSTING-AWS.md`](docs/HOSTING-AWS.md) covers EC2 and
-App Runner, with a bootstrap script in `deploy/`. The short version: a single long-lived Node process,
-one instance, no serverless.
-
-The server keeps auction state in memory and relies on being a **single Node process** — SSE
-subscribers and the writer must share a process. So:
-
-```bash
-npm run build && npm start
-```
-
-Deploy to anything that runs one long-lived Node process (Render, Railway, Fly, a VPS).
-[`render.yaml`](render.yaml) is a Render Blueprint — point Render at the repo and paste three
-secrets. A `Dockerfile` covers everything else.
-
-**Do not deploy to a serverless platform**: each invocation gets its own store and the room
-appears to lose its bids. `npm start` honours `$PORT`, which is what hosts inject.
-
-For a multi-instance deployment, swap `lib/store.ts` for Redis (the only changes are the event
-append and the subscriber fan-out) and use a sticky or pub/sub path for SSE.
+---
 
 ## Scripts
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Dev server on :3000 |
-| `npm run build` | Production build |
+| `npm run build` / `npm start` | Production build / serve (honours `$PORT`) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `POST /api/dev/reset` | Re-arm fresh demo lots (also a button in the footer) |
-| `node scripts/rehearse.mjs` | Drive the full demo in two browser windows and capture `docs/screenshots/` |
 | `npm run check:nexconn` | Find your data centre and verify the signature |
+| `npm run video` | Build the narrated, chaptered demo |
+| `npm run record` | Build the 35-second two-window demo |
 | `node scripts/verify-sdk.mjs` | Prove the browser SDK receives a message live |
-| `npm run record` | Record the two-window demo and compose `docs/video/bidlive-demo.mp4` |
-| `node scripts/shoot.mjs <url> <out.png>` | Screenshot harness used during development |
+| `node scripts/rehearse.mjs` | Drive the full demo in two windows and capture screenshots |
+| `node scripts/writeup.mjs` | Render the submission PDF |
+| `POST /api/dev/reset` | Re-arm fresh demo lots (also a footer button in `/app`) |
+
+---
+
+## Credits
+
+Lot photography from Wikimedia Commons (CC0 / public domain / CC BY-SA) — see
+`public/images/lots/CREDITS.json`. Fonts: Plus Jakarta Sans (SIL OFL), Geist Mono (SIL OFL).
