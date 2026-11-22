@@ -3,7 +3,7 @@
  *
  *   node scripts/writeup.mjs
  *
- * Two A4 pages, rendered in Chromium and printed to docs/writeup.pdf. The font and
+ * Two A4 pages, rendered in Chromium and printed to docs/BidLive.pdf. The font and
  * the screenshot are inlined as base64 so the render is self-contained and does not
  * depend on the dev server being up.
  */
@@ -13,7 +13,7 @@ import path from "node:path";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const OUT = path.join(ROOT, "docs", "writeup.pdf");
+const OUT = path.join(ROOT, "docs", "BidLive.pdf");
 const FONT = path.join(ROOT, "public/fonts/plus-jakarta-sans-var.woff2");
 const SHOT = path.join(ROOT, "docs/shots/08-live-aws.png");
 
@@ -226,4 +226,4 @@ await page.pdf({
 });
 await browser.close();
 
-console.log(`wrote docs/writeup.pdf (${(statSync(OUT).size / 1024).toFixed(0)} KB)`);
+console.log(`wrote docs/BidLive.pdf (${(statSync(OUT).size / 1024).toFixed(0)} KB)`);

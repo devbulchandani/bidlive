@@ -213,7 +213,7 @@ Two outputs, both written to `docs/` (local only, gitignored):
 |---|---|
 | `docs/video/bidlive-full.mp4` | the submission cut — ~2 min, 1920×1080, narrated, one chapter per feature |
 | `docs/video/bidlive-demo.mp4` | a 35-second silent two-window cut |
-| `docs/writeup.pdf` | the submission write-up |
+| `docs/BidLive.pdf` | the submission write-up |
 
 ```bash
 npm run video       # chapters + narration + captions; needs ffmpeg and a Gnani key
