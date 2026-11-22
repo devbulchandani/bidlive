@@ -51,14 +51,14 @@ h1 em { font-style:normal; color:var(--accent); }
 .fact b { display:block; font-size:9.2pt; margin-top:1mm; letter-spacing:-.01em; word-break:break-all; }
 .fact.key { border-color:#f0c0af; background:#fdf1ec; }
 .fact.key b { color:#c23c17; font-size:11pt; letter-spacing:.02em; }
-h2 { font-size:11.5pt; letter-spacing:-.025em; margin:7mm 0 2mm; }
+h2 { font-size:11.5pt; letter-spacing:-.025em; margin:5.2mm 0 1.8mm; }
 p { margin:0 0 2.4mm; color:var(--ink2); }
 p strong { color:var(--ink); }
 ul { margin:0 0 2.4mm; padding-left:4.4mm; color:var(--ink2); }
 li { margin-bottom:1.4mm; }
 table { width:100%; border-collapse:collapse; font-size:8.3pt; margin:1mm 0 2mm; }
 th { text-align:left; font-size:6.8pt; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--line); padding:0 2mm 1.6mm 0; font-weight:600; }
-td { padding:1.6mm 2mm 1.6mm 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink2); }
+td { padding:1.35mm 2mm 1.35mm 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink2); }
 td:first-child { color:var(--ink); font-weight:700; width:31%; }
 code { font-family:ui-monospace, monospace; font-size:7.5pt; background:var(--soft); padding:.3mm 1.1mm; border-radius:1mm; }
 .shot { border:1px solid var(--line); border-radius:3mm; overflow:hidden; margin:3mm 0 0; }
@@ -68,7 +68,7 @@ code { font-family:ui-monospace, monospace; font-size:7.5pt; background:var(--so
 .flow div { border:1px solid var(--line); border-radius:2mm; padding:2mm 2.6mm; background:var(--soft); }
 .flow div.hi { border-color:#f0c0af; background:#fdf1ec; color:#c23c17; font-weight:700; }
 .flow span { color:var(--faint); }
-.evidence { display:grid; grid-template-columns:1fr 1fr; gap:1.5mm 5mm; font-size:8.2pt; color:var(--ink2); }
+.evidence { display:grid; grid-template-columns:1fr 1fr; gap:1.2mm 5mm; font-size:8.2pt; color:var(--ink2); }
 .evidence div { display:flex; gap:1.8mm; }
 .evidence i { color:#1c8b5f; font-style:normal; font-weight:700; }
 .foot { margin-top:auto; border-top:1px solid var(--line); padding-top:2.4mm; display:flex; justify-content:space-between; font-size:7pt; color:var(--faint); }
@@ -156,7 +156,7 @@ const pageTwo = `
     <div class="hi">Nexconn Server API</div><span>→</span><div>Group channel</div>
   </div>
   <p>The browser also connects the Chat SDK directly for identity, membership, live receipt and
-  history. One decision — what a bid is — produces the card, the push and the record.</p>
+  history.</p>
 
   <h2>What we verified on the deployed app</h2>
   <div class="evidence">
@@ -180,12 +180,10 @@ const pageTwo = `
 
   <h2>What we would build next</h2>
   <ul>
-    <li><strong>Proxy bidding.</strong> Set a maximum and let the server raise one increment at a
-    time. The event log already models it as a projection, not a new subsystem.</li>
-    <li><strong>Pre-delivery validation.</strong> The message callback is wired and documented; enabling
-    it means an invalid bid never exists for anyone, rather than being refused on arrival.</li>
-    <li><strong>Redis behind the store.</strong> Two changes — the event append and the subscriber
-    fan-out — to make the single-instance limit go away.</li>
+    <li><strong>Proxy bidding.</strong> A maximum the server raises on your behalf, one increment at a
+    time.</li>
+    <li><strong>Pre-delivery validation.</strong> The callback is wired; enabling it means an invalid
+    bid never exists for anyone.</li>
   </ul>
 
   <div class="foot"><span>${REPO}</span><span>Page 2 of 2</span></div>
@@ -208,6 +206,18 @@ const browser = await chromium.launch({ executablePath: exe });
 const page = await browser.newPage();
 await page.goto(`file://${htmlPath}`);
 await page.waitForTimeout(1200);
+
+// A page that overflows is clipped by `overflow:hidden`, and the PDF silently loses
+// its footer. Compare scroll height to client height before printing instead.
+const overflow = await page.evaluate(() =>
+  [...document.querySelectorAll(".page")].map((el) => el.scrollHeight - el.clientHeight),
+);
+const bad = overflow.filter((px) => px > 1);
+if (bad.length) {
+  throw new Error(
+    `page overflow (px): ${overflow.join(", ")} — trim content or tighten spacing`,
+  );
+}
 await page.pdf({
   path: OUT,
   format: "A4",
