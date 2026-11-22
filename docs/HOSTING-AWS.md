@@ -1,5 +1,28 @@
 # Deploying on AWS
 
+> **Live:** https://34-227-57-42.sslip.io — EC2 `t3.micro`, `us-east-1`,
+> instance `i-0e11f593de52ea9ba`, security group `sg-054ffb88247cae2dd`.
+> `./deploy/aws-teardown.sh` removes both. Costs about $0.01/hour.
+
+## Two things that actually broke on the first real deploy
+
+Both were silent, and both are worth knowing before you change the bootstrap:
+
+1. **Caddy is not in Ubuntu's default sources.** `apt-get install -y caddy` fails, and
+   because the script runs under `set -e`, *everything after it stops* — the instance comes up
+   "healthy" with nothing listening on 80. The fix is the official Cloudsmith repo, which
+   `deploy/aws-deploy.sh` now adds.
+2. **IMDSv2 is enforced on Ubuntu 24.04.** A plain
+   `curl http://169.254.169.254/latest/meta-data/public-ipv4` returns 401 and an empty string,
+   so Caddy was configured for the subject `.sslip.io` and refused to start with
+   *"subject does not qualify for certificate"*. The instance's public IP must be read with a
+   session token.
+
+Neither is detectable from `describe-instances` — the instance reports `running / ok / ok`
+throughout. That is why the deploy also attaches an SSM instance profile: `aws ssm
+send-command` can then read `/var/log/bidlive-boot.log` on a box with no SSH access.
+
+
 ## Pick the service for the shape of this app, not the other way round
 
 The app is a **single long-lived Node process** holding auction state in memory, with two

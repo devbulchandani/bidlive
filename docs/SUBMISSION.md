@@ -15,7 +15,7 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 | App Key | `4z3hlwrv4jtkt` (production environment, North America data centre) |
 | Demo video | `docs/video/bidlive-full.mp4` — 1:58 (118s), 1920×1080, narrated (`npm run video`). Upload unlisted and paste the link |
 | Transcript | `docs/video/transcript.md` · narration only in `docs/video/voiceover.txt` |
-| Runnable app | `<link>` |
+| Runnable app | https://34-227-57-42.sslip.io |
 | Public repo | https://github.com/devbulchandani/bidlive |
 | Team | `<names + roles>` |
 | Pre-existing code | **None — built from scratch during the challenge.** Seeded demo lots only |
