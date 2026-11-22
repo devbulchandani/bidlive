@@ -228,6 +228,35 @@ would have cost a day and none of them makes the auction mechanic more convincin
 
 ---
 
+## Recording the demo
+
+```bash
+npm run record      # needs ffmpeg on PATH (brew install ffmpeg)
+```
+
+It drives two real browser windows — Riya bidding, Arjun counter-bidding — with real clicks,
+records both, and composites them side by side with a title and end card:
+
+```
+docs/video/bidlive-demo.mp4   2560×720 · ~35s · silent
+```
+
+The beat list is deliberately sparse: a question, three taps, then the auctioneer closes the
+lot with 14 seconds left so the countdown visibly runs down in red, a bid lands, and the clock
+jumps to ~0:36 with the extension message. That one moment is the whole anti-snipe argument,
+so it gets the most screen time.
+
+The capture is silent. Two ways to finish it:
+
+- **Narrate over it** — drop the mp4 into iMovie/CapCut, record a voiceover against the shot
+  list in [`docs/SUBMISSION.md`](docs/SUBMISSION.md), export 1080p.
+- **Record it yourself** — `Cmd+Shift+5` on macOS (or Screen Studio for the polished cursor
+  smoothing), two windows side by side, following the same beats. Best if you want your own
+  cursor and voice in one take.
+
+Either way: `POST /api/dev/reset` first (or the footer button in `/app`) so the clocks are
+fresh, and note that the dev-mode badge is disabled in `next.config.ts` so it stays out of frame.
+
 ## Deployment
 
 The server keeps auction state in memory and relies on being a **single Node process** — SSE
@@ -255,4 +284,5 @@ append and the subscriber fan-out) and use a sticky or pub/sub path for SSE.
 | `node scripts/rehearse.mjs` | Drive the full demo in two browser windows and capture `docs/screenshots/` |
 | `npm run check:nexconn` | Find your data centre and verify the signature |
 | `node scripts/verify-sdk.mjs` | Prove the browser SDK receives a message live |
+| `npm run record` | Record the two-window demo and compose `docs/video/bidlive-demo.mp4` |
 | `node scripts/shoot.mjs <url> <out.png>` | Screenshot harness used during development |

@@ -83,6 +83,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useNotices(identity?.id ?? null, pushToast);
 
+  // Placing a bid answers the "you've been outbid" notice, so it should not
+  // linger while you are actually leading again.
+  useEffect(() => {
+    const clear = () => setToasts([]);
+    window.addEventListener("bidlive:bid-placed", clear);
+    return () => window.removeEventListener("bidlive:bid-placed", clear);
+  }, []);
+
   return (
     <div className="shell">
       <Rail

@@ -120,6 +120,7 @@ export function RoomPane({ lotId }: { lotId: string }) {
         }
         setText("");
         window.dispatchEvent(new Event("bidlive:refresh-lots"));
+        window.dispatchEvent(new Event("bidlive:bid-placed"));
         return true;
       } catch (err) {
         flash(err instanceof Error ? err.message : "Bid failed");
