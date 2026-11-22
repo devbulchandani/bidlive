@@ -28,6 +28,7 @@ const b64 = (p) => (existsSync(p) ? readFileSync(p).toString("base64") : "");
 
 const APP_KEY = env("NEXCONN_APP_KEY");
 const LIVE = "https://34-227-57-42.sslip.io";
+const VIDEO = "https://youtu.be/NQCWGp0c6As";
 const REPO = "github.com/devbulchandani/bidlive";
 
 const fontB64 = b64(FONT);
@@ -45,10 +46,11 @@ body { font-family:"Jakarta", system-ui, sans-serif; color:var(--ink); font-size
 h1 { font-size:26pt; line-height:1.02; letter-spacing:-.045em; margin:9mm 0 3mm; }
 h1 em { font-style:normal; color:var(--accent); }
 .lede { font-size:11pt; color:var(--ink2); max-width:150mm; line-height:1.45; }
-.facts { display:flex; gap:4mm; margin:6mm 0 0; flex-wrap:wrap; }
-.fact { border:1px solid var(--line); border-radius:3mm; padding:2.6mm 3.4mm; min-width:40mm; }
+.facts { display:grid; grid-template-columns:1fr 1fr; gap:3mm; margin:5mm 0 0; }
+.fact { border:1px solid var(--line); border-radius:3mm; padding:2.4mm 3.2mm; min-width:0; }
 .fact span { display:block; font-size:6.8pt; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
 .fact b { display:block; font-size:9.2pt; margin-top:1mm; letter-spacing:-.01em; word-break:break-all; }
+.fact a { color:inherit; text-decoration:none; }
 .fact.key { border-color:#f0c0af; background:#fdf1ec; }
 .fact.key b { color:#c23c17; font-size:11pt; letter-spacing:.02em; }
 h2 { font-size:11.5pt; letter-spacing:-.025em; margin:5.2mm 0 1.8mm; }
@@ -85,8 +87,9 @@ const pageOne = `
 
   <div class="facts">
     <div class="fact key"><span>App Key</span><b>${APP_KEY}</b></div>
-    <div class="fact"><span>Live app</span><b>${LIVE.replace("https://", "")}</b></div>
-    <div class="fact"><span>Source</span><b>${REPO}</b></div>
+    <div class="fact"><span>Live app</span><b><a href="${LIVE}">${LIVE.replace("https://", "")}</a></b></div>
+    <div class="fact"><span>Demo video</span><b><a href="${VIDEO}">${VIDEO.replace("https://", "")}</a></b></div>
+    <div class="fact"><span>Source</span><b><a href="https://${REPO}">${REPO}</a></b></div>
   </div>
 
   <h2>Why we built it</h2>
@@ -113,7 +116,7 @@ const pageOne = `
   <div class="shot"><img alt="BidLive lot room" src="data:image/png;base64,${shotB64}"></div>
   <div class="cap">The deployed app: lot room, live bid card, and the rail of auctions on the left.</div>
 
-  <div class="foot"><span>BidLive · ${LIVE}</span><span>Page 1 of 2</span></div>
+  <div class="foot"><span>BidLive · ${LIVE.replace("https://","")} · ${VIDEO.replace("https://","")}</span><span>Page 1 of 2</span></div>
 </div>`;
 
 const pageTwo = `

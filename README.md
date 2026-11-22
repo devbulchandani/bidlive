@@ -4,7 +4,8 @@
 clock and the minimum are enforced on the server, and the transcript is the record — which is also
 what the auction is rebuilt from after a restart.
 
-**Live:** https://34-227-57-42.sslip.io · **Built for:** Nexconn Build Challenge 2026
+**Live:** https://34-227-57-42.sslip.io · **Demo:** https://youtu.be/NQCWGp0c6As ·
+**Built for:** Nexconn Build Challenge 2026
 
 ![Two windows at the same instant: Riya is outbid, Arjun is leading](assets/hero.png)
 
