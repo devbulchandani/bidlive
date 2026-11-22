@@ -38,8 +38,8 @@ await page.goto(`${BASE}/lot/yashica?as=Riya`, { waitUntil: "domcontentloaded" }
 
 const readPill = () =>
   page.evaluate(() => {
-    const pills = [...document.querySelectorAll(".pill")].map((el) => el.textContent?.trim() ?? "");
-    return pills.find((t) => t.startsWith("SDK")) ?? "(no SDK pill)";
+    const chips = [...document.querySelectorAll(".chip")].map((el) => el.textContent?.trim() ?? "");
+    return chips.find((t) => t.startsWith("SDK")) ?? "(no SDK pill)";
   });
 
 // give the SDK time to initialise, auth and join the channel

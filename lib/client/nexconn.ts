@@ -29,8 +29,7 @@ export function useNexconnBridge(identity: Identity | null, channelId: string | 
   const received = useRef(0);
 
   useEffect(() => {
-    const appKey = process.env.NEXT_PUBLIC_NEXCONN_APP_KEY;
-    if (!identity || !channelId || !appKey) {
+    if (!identity || !channelId) {
       setState(INITIAL);
       return;
     }
@@ -41,6 +40,19 @@ export function useNexconnBridge(identity: Identity | null, channelId: string | 
     const start = async () => {
       setState({ status: "connecting", received: 0 });
       try {
+        // Build-time inlining is a deploy footgun: a stale NEXT_PUBLIC key yields a
+        // client that connects to the wrong region and silently receives nothing.
+        // Prefer the server's answer, fall back to the env var.
+        let appKey = process.env.NEXT_PUBLIC_NEXCONN_APP_KEY;
+        if (!appKey) {
+          const health = await client.health();
+          appKey = health.appKey ?? undefined;
+        }
+        if (!appKey) {
+          setState({ status: "off", received: 0 });
+          return;
+        }
+
         const tokenRes = await client.token(identity.id, identity.name);
         if (cancelled) return;
         if (!tokenRes.configured || !tokenRes.token) {

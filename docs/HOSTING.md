@@ -32,7 +32,13 @@ attached to it, plus the OpenNext adapter for Next.js. That is a real migration 
 the store and the fan-out, then re-verifying bid ordering, anti-snipe and replay — and it is
 not a change to make the day before submission.
 
-### Render — recommended, no CLI needed
+### AWS — see [HOSTING-AWS.md](HOSTING-AWS.md)
+
+EC2 t3.micro with [`deploy/ec2-user-data.sh`](../deploy/ec2-user-data.sh) is the best fit on
+AWS: one process, always on, no cold start, no Docker. Free for 12 months on a new account,
+about $7.50/month after.
+
+### Render — no CLI needed
 
 [`render.yaml`](../render.yaml) is a Blueprint, so there is nothing to install.
 

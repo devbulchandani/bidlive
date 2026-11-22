@@ -286,7 +286,8 @@ fresh, and note that the dev-mode badge is disabled in `next.config.ts` so it st
 ## Deployment
 
 [`docs/HOSTING.md`](docs/HOSTING.md) has the detail, including why GitHub Pages and
-Cloudflare Workers do not fit. The short version: a single long-lived Node process,
+Cloudflare Workers do not fit. [`docs/HOSTING-AWS.md`](docs/HOSTING-AWS.md) covers EC2 and
+App Runner, with a bootstrap script in `deploy/`. The short version: a single long-lived Node process,
 one instance, no serverless.
 
 The server keeps auction state in memory and relies on being a **single Node process** — SSE

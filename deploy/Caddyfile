@@ -1,0 +1,21 @@
+# Caddy reverse proxy for BidLive.
+#
+#   cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   # replace the hostname with your instance's IP in dashed form:
+#   #   13.233.1.2  ->  13-233-1-2.sslip.io
+#   systemctl reload caddy
+#
+# sslip.io resolves any dashed IP to that address, so Caddy can obtain a real
+# Let's Encrypt certificate without buying a domain — which matters because
+# judges will not click through a browser warning.
+#
+# `flush_interval -1` disables response buffering. Without it the SSE streams
+# (/api/lots/[id]/stream and /api/notifications/stream) arrive in bursts and the
+# countdown stutters.
+
+13-233-1-2.sslip.io {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000 {
+		flush_interval -1
+	}
+}

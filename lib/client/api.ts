@@ -48,9 +48,12 @@ export const client = {
     ),
   lot: (id: string) => getJSON<LotResponse>(`/api/lots/${encodeURIComponent(id)}`),
   health: () =>
-    getJSON<{ nexconnConfigured: boolean; nexconnApiBase: string | null; lots: number }>(
-      "/api/health",
-    ),
+    getJSON<{
+      nexconnConfigured: boolean;
+      nexconnApiBase: string | null;
+      appKey: string | null;
+      lots: number;
+    }>("/api/health"),
   token: (userId: string, name: string) =>
     getJSON<{ configured: boolean; token: string | null }>(
       `/api/token?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}`,
