@@ -285,6 +285,10 @@ fresh, and note that the dev-mode badge is disabled in `next.config.ts` so it st
 
 ## Deployment
 
+[`docs/HOSTING.md`](docs/HOSTING.md) has the detail, including why GitHub Pages and
+Cloudflare Workers do not fit. The short version: a single long-lived Node process,
+one instance, no serverless.
+
 The server keeps auction state in memory and relies on being a **single Node process** — SSE
 subscribers and the writer must share a process. So:
 
@@ -292,9 +296,12 @@ subscribers and the writer must share a process. So:
 npm run build && npm start
 ```
 
-Deploy to anything that runs one long-lived Node process (Render, Railway, Fly, a VPS). **Do not
-deploy to a serverless platform** — each invocation would get its own store and the room would appear
-to lose its bids.
+Deploy to anything that runs one long-lived Node process (Render, Railway, Fly, a VPS).
+[`render.yaml`](render.yaml) is a Render Blueprint — point Render at the repo and paste three
+secrets. A `Dockerfile` covers everything else.
+
+**Do not deploy to a serverless platform**: each invocation gets its own store and the room
+appears to lose its bids. `npm start` honours `$PORT`, which is what hosts inject.
 
 For a multi-instance deployment, swap `lib/store.ts` for Redis (the only changes are the event
 append and the subscriber fan-out) and use a sticky or pub/sub path for SSE.

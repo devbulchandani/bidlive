@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: bidlive
+    runtime: node
+    # `free` sleeps after 15 minutes idle; the first visitor then waits ~40s while
+    # the process boots and the room replays itself out of Nexconn. Switch to
+    # `starter` for an always-on link that judges will open at a random hour.
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # data centre — must match the App Key's region
+      - key: NEXCONN_API_BASE
+        value: https://api.us-light-api.com
+      - key: NEXCONN_API_BACKUP
+        value: https://api-b.us-light-api.com
+      - key: NEXCONN_AREA_CODE
+        value: "3"
+      - key: NEXT_PUBLIC_NEXCONN_AREA_CODE
+        value: "3"
+      # secrets — set these in the Render dashboard, never in the repo
+      - key: NEXCONN_APP_KEY
+        sync: false
+      - key: NEXCONN_APP_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_NEXCONN_APP_KEY
+        sync: false

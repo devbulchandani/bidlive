@@ -11,8 +11,9 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 |---|---|
 | Project name | **BidLive** |
 | One-liner | A live auction that runs inside a chat room — bids are messages, the clock is enforced server-side, and the transcript is the ledger |
+| Nexconn packages | **Chat SDK** only — `@nexconn/chat` 26.5.1 (with its pinned engine `@nexconn/engine` 26.5.1). Chat UI and Call SDK: not used |
 | App Key | `4z3hlwrv4jtkt` (production environment, North America data centre) |
-| Demo video | `docs/video/bidlive-full.mp4` — 2:07, 1920×1080, narrated (`npm run video`). Upload unlisted and paste the link |
+| Demo video | `docs/video/bidlive-full.mp4` — 1:58 (118s), 1920×1080, narrated (`npm run video`). Upload unlisted and paste the link |
 | Transcript | `docs/video/transcript.md` · narration only in `docs/video/voiceover.txt` |
 | Runnable app | `<link>` |
 | Public repo | https://github.com/devbulchandani/bidlive |
@@ -22,6 +23,63 @@ into the write-up PDF (2 pages is plenty), and use the shot list to record the v
 
 > The checklist requires the **App Key** in the PDF. The **App Secret** must never appear in the PDF,
 > the video, the repo, or a screenshot. Keep it in `.env.local`, which is gitignored.
+
+---
+
+## Proof of Nexconn integration — the three form fields
+
+### 1. Nexconn packages used
+
+- [x] **Chat SDK** — `@nexconn/chat` 26.5.1. Also present at the same pinned version:
+      `@nexconn/engine` 26.5.1, the peer dependency `@nexconn/chat` loads (`NCEngine` comes from it).
+- [ ] **Chat UI** — not used. The room is our own UI, built on the Chat SDK's `NCEngine`,
+      `GroupChannel`, `MessageHandler` and `ConnectionStatusHandler`.
+- [ ] **Call SDK** — not used. An auction needs a transcript and a clock, not voice/video.
+
+### 2. App Key
+
+`4z3hlwrv4jtkt` — production app, North America data centre (`api.us-light-api.com`, areaCode 3).
+This is the key in `.env.local` and the key the demo video runs on, so the demo and the form agree.
+Re-verified with `npm run check:nexconn`: code 200 on the NA host, 403 on every other region.
+
+### 3. SDK features used (copy-paste answer)
+
+> Every lot is a Nexconn group channel (`lot_<id>`). The server creates and joins it and is the only
+> publisher (`lib/nexconn/server.ts`). The browser holds a real Chat SDK session
+> (`lib/client/nexconn.ts`): `NCEngine.initialize` with the app key + areaCode 3, a user token from
+> `/api/token`, `NCEngine.connect`, then `GroupChannel.join`. A `MessageHandler` counts every message
+> the socket delivers — the room shows it as `SDK n`, and the demo video goes `SDK 1` → `SDK 3`.
+> A `ConnectionStatusHandler` tracks the socket state that gates that pill.
+>
+> Three registered custom message types carry the auction: `bidlive:Bid` (amount, bidder, seq,
+> endsAt), `bidlive:Chat` (room chat) and `bidlive:System` (time extension, bid recall, settlement).
+> **Message history is the database**: on a cold start `lib/client/nexconn-history.ts` pages the
+> channel with `BaseChannel.createMessagesQuery` + `loadNextPage` and posts it to
+> `/api/lots/[id]/rehydrate`, where it is replayed through the same bid rules. Outbid alerts go out
+> as private messages with `pushContent` (`notifyUser`). `/api/nexconn/callback` implements
+> pre-delivery rejection of an invalid bid (`code: 4`); it turns on by pointing the console callback
+> at it and setting `NEXCONN_CALLBACK_ENFORCE=1`.
+
+Short version, if the field has a character cap:
+
+> Group channel per lot (`lot_<id>`); Chat SDK session with `NCEngine.initialize` → `connect` →
+> `GroupChannel.join` (`lib/client/nexconn.ts`); `MessageHandler` receives live and the room counts
+> it as `SDK n`; `ConnectionStatusHandler` for connection state; registered custom messages
+> `bidlive:Bid` / `bidlive:Chat` / `bidlive:System`; channel history paged via
+> `BaseChannel.createMessagesQuery` and replayed on cold start (`lib/client/nexconn-history.ts` →
+> `/api/lots/[id]/rehydrate`); private messages with `pushContent` for outbid alerts; pre-delivery
+> message callback at `/api/nexconn/callback`.
+
+### Where a judge can see it, in 90 seconds
+
+| Evidence | Where |
+|---|---|
+| Socket receiving live, counted from the SDK | `docs/video/bidlive-full.mp4` at 0:55 (`SDK 1`) and 1:20 (`SDK 3`), top-right of the room |
+| Client init, token, connect, join | [`lib/client/nexconn.ts`](../lib/client/nexconn.ts) |
+| Server-only publishing with the App Secret | [`lib/nexconn/server.ts`](../lib/nexconn/server.ts) |
+| History → replay (no database) | [`lib/client/nexconn-history.ts`](../lib/client/nexconn-history.ts), [`lib/replay.ts`](../lib/replay.ts) |
+| Pre-delivery callback | [`app/api/nexconn/callback/route.ts`](../app/api/nexconn/callback/route.ts) |
+| Repeatable live proof | `node scripts/verify-sdk.mjs` — prints the pill before and after a bid |
 
 ---
 
